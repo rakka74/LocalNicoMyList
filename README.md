@@ -15,3 +15,6 @@
 * フォルダの新規作成、名前変更、削除機能
 * 動画の削除機能
 * TextBlockで日本語にU+0335 COMBINING SHORT STROKE OVERLAYを混ぜた文字列が文字化けするのを何とかする。WebBrowserだと文字化けしない。
+
+### スクリーンショット
+![タイトル](screenshot.JPG)
