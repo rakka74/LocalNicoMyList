@@ -52,6 +52,38 @@ namespace LocalNicoMyList
     }
 #endif
 
+    public enum SortKind
+    {
+        CreateTimeDescend,  // 登録が新しい順
+        CreateTimeAscend,   // 登録が古い順
+        TitleAscend,        // タイトル昇順
+        TitleDescend,       // タイトル降順
+        PostTimeDescend,    // 投稿が新しい順
+        PostTimeAscend,     // 投稿が古い順
+        ViewCountDescend,   // 再生が多い順
+        ViewCountAscend,    // 再生が少ない順
+        LatestCommentTimeDescend,   // コメントが新しい順
+        LatestCommentTimeAscend,    // コメントが古い順
+        CommentCountDescend,    // コメントが多い順
+        CommentCountAscend,     // コメントが少ない順
+        MyListCountDescend, // マイリスト登録が多い順
+        MyListCountAscend,  // マイリスト登録が少ない順
+        LengthCountDescend, // 時間が長い順
+        LengthCountAscend   // 時間が短い順
+    }
+
+    public class SortItem
+    {
+        public string name { get; set; }
+        public SortKind id { get; set; }
+
+        public SortItem(string name, SortKind id)
+        {
+            this.name = name;
+            this.id = id;
+        }
+    }
+
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>
@@ -64,11 +96,7 @@ namespace LocalNicoMyList
         //        long _selectedFolderId;
         FolderItem _selectedFolderItem;
         CollectionViewSource _myListItemCVS;
-
-        //class VideoInfo
-        //{
-
-        //}
+        public ObservableCollection<SortItem> _sortCBItems;
 
         public MainWindow()
         {
@@ -109,13 +137,31 @@ namespace LocalNicoMyList
             _myListItemCVS.Source = _myListItemSource;
             _videoListView.DataContext = _myListItemCVS;
 
-            // とりあえず再生数でソート
-            var sortDescription = new SortDescription
-            {
-                PropertyName = "viewCounter",
-                Direction = ListSortDirection.Ascending
-            };
-            _myListItemCVS.SortDescriptions.Add(sortDescription);
+            // コンボボックス初期化
+            _sortCBItems = new ObservableCollection<SortItem>();
+            _sortCBItems.Add(new SortItem("登録が新しい順", SortKind.CreateTimeDescend));
+            _sortCBItems.Add(new SortItem("登録が古い順", SortKind.CreateTimeAscend));
+            _sortCBItems.Add(new SortItem("タイトル昇順", SortKind.TitleAscend));
+            _sortCBItems.Add(new SortItem("タイトル降順", SortKind.TitleDescend));
+            _sortCBItems.Add(new SortItem("投稿が新しい順", SortKind.PostTimeDescend));
+            _sortCBItems.Add(new SortItem("投稿が古い順", SortKind.PostTimeAscend));
+            _sortCBItems.Add(new SortItem("再生が多い順", SortKind.ViewCountDescend));
+            _sortCBItems.Add(new SortItem("再生が少ない順", SortKind.ViewCountAscend));
+#if false
+            _sortCBItems.Add(new SortItem("コメントが新しい順", SortKind.LatestCommentTimeDescend));
+            _sortCBItems.Add(new SortItem("コメントが古い順", SortKind.LatestCommentTimeAscend));
+#endif
+            _sortCBItems.Add(new SortItem("コメントが多い順", SortKind.CommentCountDescend));
+            _sortCBItems.Add(new SortItem("コメントが少ない順", SortKind.CommentCountAscend));
+            _sortCBItems.Add(new SortItem("マイリスト登録が多い順", SortKind.MyListCountDescend));
+            _sortCBItems.Add(new SortItem("マイリスト登録が少ない順", SortKind.MyListCountAscend));
+            _sortCBItems.Add(new SortItem("時間が長い順", SortKind.LengthCountDescend));
+            _sortCBItems.Add(new SortItem("時間が短い順", SortKind.LengthCountAscend));
+
+            this.sortCB.DataContext = _sortCBItems;
+
+            this.sortCB.SelectedValue = SortKind.ViewCountDescend; // とりあえず再生数の多い順で表示
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -291,6 +337,137 @@ namespace LocalNicoMyList
 
             _myListItemSource = new ObservableCollection<MyListItem>(myListItems);
             _myListItemCVS.Source = _myListItemSource;
+        }
+
+        private void sortCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            this.setSortKind((SortKind)((ComboBox)sender).SelectedValue);
+        }
+
+        public void setSortKind(SortKind sortKind)
+        {
+            _myListItemCVS.SortDescriptions.Clear();
+
+            SortDescription sortDescription = new SortDescription();
+            switch (sortKind)
+            {
+                case SortKind.CreateTimeDescend: // 登録が新しい順
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "createTime",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.CreateTimeAscend: // 登録が古い順
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "createTime",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+                case SortKind.TitleAscend: // タイトル昇順
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "title",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+                case SortKind.TitleDescend: // タイトル降順
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "title",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.PostTimeDescend: // 投稿が新しい順
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "postTime",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.PostTimeAscend: // 投稿が古い順
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "postTime",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+                case SortKind.ViewCountDescend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "viewCounter",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.ViewCountAscend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "viewCounter",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+#if false
+                case SortKind.LatestCommentTimeDescend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.LatestCommentTimeAscend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+#endif
+                case SortKind.CommentCountDescend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "commentNum",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.CommentCountAscend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "commentNum",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+                case SortKind.MyListCountDescend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "mylistCounter",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.MyListCountAscend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "mylistCounter",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+                case SortKind.LengthCountDescend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "length",
+                        Direction = ListSortDirection.Descending
+                    };
+                    break;
+                case SortKind.LengthCountAscend:
+                    sortDescription = new SortDescription
+                    {
+                        PropertyName = "length",
+                        Direction = ListSortDirection.Ascending
+                    };
+                    break;
+            }
+
+            _myListItemCVS.SortDescriptions.Add(sortDescription);
         }
     }
 

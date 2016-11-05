@@ -54,24 +54,8 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <ComboBox Grid.Row="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5">
-                <ComboBoxItem>登録が新しい順</ComboBoxItem>
-                <ComboBoxItem>登録が古い順</ComboBoxItem>
-                <ComboBoxItem>タイトル昇順</ComboBoxItem>
-                <ComboBoxItem>タイトル降順</ComboBoxItem>
-                <ComboBoxItem>投稿が新しい順</ComboBoxItem>
-                <ComboBoxItem>投稿が古い順</ComboBoxItem>
-                <ComboBoxItem>再生が多い順</ComboBoxItem>
-                <ComboBoxItem>再生が少ない順</ComboBoxItem>
-                <ComboBoxItem>コメントが新しい順</ComboBoxItem>
-                <ComboBoxItem>コメントが古い順</ComboBoxItem>
-                <ComboBoxItem>コメントが多い順</ComboBoxItem>
-                <ComboBoxItem>コメントが少ない順</ComboBoxItem>
-                <ComboBoxItem>マイリスト登録が多い順</ComboBoxItem>
-                <ComboBoxItem>マイリスト登録が少ない順</ComboBoxItem>
-                <ComboBoxItem>時間が長い順</ComboBoxItem>
-                <ComboBoxItem>時間が短い順</ComboBoxItem>
-            </ComboBox>
+            <ComboBox x:Name="sortCB" Grid.Row="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5"
+                      ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
             <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource DataTemplate1}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"></ListView>
         </Grid>
     </Grid>
