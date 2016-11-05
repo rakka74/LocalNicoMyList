@@ -24,7 +24,7 @@
                 <Image Source="{Binding thumbnailUrl}" Width="100" Height="76" />
                 <StackPanel Orientation="Vertical" Margin="10,0,0,0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding postTime, StringFormat=yyyy年MM月dd日\ hh時mm分}" FontSize="12" FontWeight="Bold" />
+                        <TextBlock Text="{Binding firstRetrieve, StringFormat=yyyy年MM月dd日\ hh時mm分}" FontSize="12" FontWeight="Bold" />
                         <TextBlock Text="投稿" FontSize="12" Margin="5,0,0,0"/>
                     </StackPanel>
                     <TextBlock Text="{Binding title}" FontSize="16" FontWeight="Bold" />

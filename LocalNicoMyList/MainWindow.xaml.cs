@@ -291,12 +291,19 @@ namespace LocalNicoMyList
             }
         }
 
-        private async void _folderListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void _folderListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             FolderItem item = e.AddedItems[0] as FolderItem;
             _selectedFolderItem = item;
-            //            _selectedFolderId = item.id;
-            await refreshMyList();
+
+            // DBから情報を取得して動画一覧の内容を更新
+            _myListItemSource = new ObservableCollection<MyListItem>();
+            foreach (var record in _dbAccessor.getMyListItem(item.id))
+            {
+                _myListItemSource.Add(new MyListItem(record));
+            }
+
+            _myListItemCVS.Source = _myListItemSource;
         }
 
         CancellationTokenSource _refreshMyListCts;

@@ -14,7 +14,7 @@ namespace LocalNicoMyList
         public DBAccessor()
         {
             _conn = new SQLiteConnection();
-            _conn.ConnectionString = "Data Source=localNicoMyList.db";
+            _conn.ConnectionString = "Data Source=LocalNicoMyList.db";
             _conn.Open();
             SQLiteCommand command = _conn.CreateCommand();
             command.CommandText = "CREATE TABLE IF NOT EXISTS folder (" +
@@ -27,8 +27,15 @@ namespace LocalNicoMyList
             command = _conn.CreateCommand();
             command.CommandText = "CREATE TABLE IF NOT EXISTS myListItem (" +
                     "videoId text, " +
-                    "createTime real, " +
+                    "createTime real, " +   // フォルダに追加した日時
                     "folderId INTEGER, " +
+                    "title text, " +
+                    "thumbnailUrl text," +
+                    "firstRetrieve real, " +    // 投稿日時
+                    "length real, " +
+                    "viewCounter integer, " +
+                    "commentNum integer, " +
+                    "mylistCounter integer, " +
                     "foreign key(folderId) references folder(id)" +
             ")";
             command.ExecuteNonQuery();
@@ -85,7 +92,14 @@ namespace LocalNicoMyList
         public class MyListItemRecord
         {
             public string videoId;
-            public DateTime createTime;
+            public DateTime createTime; // マイリスト追加日時
+            public string title;
+            public string thumbnailUrl;
+            public DateTime firstRetrieve; // 投稿日時
+            public TimeSpan length;
+            public int viewCounter; // 再生数
+            public int commentNum; // コメント数
+            public int mylistCounter; // マイリスト数
         }
 
         public List<MyListItemRecord> getMyListItem(long folderId)
@@ -100,7 +114,14 @@ namespace LocalNicoMyList
                     ret.Add(new MyListItemRecord()
                     {
                         videoId = reader["videoId"].ToString(),
-                        createTime = DateTimeExt.fromUnixTime((long)((double)reader["createTime"]))
+                        createTime = DateTimeExt.fromUnixTime((long)((double)reader["createTime"])),
+                        title = reader["title"].ToString(),
+                        thumbnailUrl = reader["thumbnailUrl"].ToString(),
+                        firstRetrieve = DateTimeExt.fromUnixTime((long)((double)reader["firstRetrieve"])),
+                        length = TimeSpan.FromSeconds((double)reader["length"]),
+                        viewCounter = (int)((long)reader["viewCounter"]),
+                        commentNum = (int)((long)reader["commentNum"]),
+                        mylistCounter = (int)((long)reader["mylistCounter"])
                     });
                 }
             }
@@ -113,10 +134,17 @@ namespace LocalNicoMyList
             using (SQLiteTransaction trans = _conn.BeginTransaction())
             {
                 command = _conn.CreateCommand();
-                command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2})",
+                command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9})",
                         item.videoId,
                         item.createTime.toUnixTime(),
-                        folderId);
+                        folderId,
+                        item.title.Replace("'", "''"),
+                        item.thumbnailUrl,
+                        item.firstRetrieve.toUnixTime(),
+                        item.length.TotalSeconds,
+                        item.viewCounter,
+                        item.commentNum,
+                        item.mylistCounter);
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -134,10 +162,17 @@ namespace LocalNicoMyList
                 foreach (var item in items)
                 {
                     command = _conn.CreateCommand();
-                    command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2})",
+                    command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9})",
                             item.videoId,
                             item.createTime.toUnixTime(),
-                            folderId);
+                            folderId,
+                            item.title.Replace("'", "''"),
+                            item.thumbnailUrl,
+                            item.firstRetrieve.toUnixTime(),
+                            item.length.TotalSeconds,
+                            item.viewCounter,
+                            item.commentNum,
+                            item.mylistCounter);
                     command.ExecuteNonQuery();
                 }
                 trans.Commit();
