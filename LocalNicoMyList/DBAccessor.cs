@@ -123,9 +123,11 @@ namespace LocalNicoMyList
                         length = TimeSpan.FromSeconds((double)reader["length"]),
                         viewCounter = (int)((long)reader["viewCounter"]),
                         commentNum = (int)((long)reader["commentNum"]),
-                        mylistCounter = (int)((long)reader["mylistCounter"]),
-                        latestCommentTime = DateTimeExt.fromUnixTime((long)((double)reader["latestCommentTime"])),
+                        mylistCounter = (int)((long)reader["mylistCounter"])
                     });
+                    var latestCommentTime = reader["latestCommentTime"];
+                    if (!(latestCommentTime is System.DBNull))
+                        latestCommentTime = DateTimeExt.fromUnixTime((long)((double)reader["latestCommentTime"]));
                 }
             }
             return ret;
