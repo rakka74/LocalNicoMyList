@@ -16,6 +16,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using static LocalNicoMyList.DBAccessor;
+using static LocalNicoMyList.nicoApi.NicoApi;
 
 namespace LocalNicoMyList
 {
@@ -367,6 +368,57 @@ namespace LocalNicoMyList
             catch (Exception e)
             {
                 Console.WriteLine(e);
+            }
+            finally
+            {
+                progressWindow.Close();
+            }
+        }
+
+        private async void updateLatestCommentTimeButton_Click(object sender, RoutedEventArgs e)
+        {
+            var progressWindow = new ProgressWindow();
+            var progress = new Progress<int>(value =>
+            {
+                progressWindow.ProgressBar.Value = value;
+            });
+
+            var cts = new CancellationTokenSource();
+            progressWindow.Closed += (_, __) => cts.Cancel();
+
+            var task = updateLatestCommentTimeAsync(progressWindow, cts.Token, progress);
+            progressWindow.ShowDialog();
+            await task;
+        }
+
+        private async Task updateLatestCommentTimeAsync(ProgressWindow progressWindow, CancellationToken token, IProgress<int> progress)
+        {
+            try
+            {
+                progressWindow.ProgressBar.MaxHeight = _myListItemSource.Count;
+                int count = 0;
+                foreach (MyListItem item in _myListItemSource)
+                {
+                    int waitTime = 1000*30;
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine(item.videoId);
+                            DateTime? latestCommentTime = await this.getLatestCommentTimeAsync(item.videoId);
+                            ++count;
+                            progress.Report(count);
+                            break;
+                        }
+                        catch (AccessLockedException e)
+                        {
+                            Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
+                            await Task.Delay(waitTime);
+                            waitTime += 1000;
+                        }
+                    }
+                    await Task.Delay(1000);
+                }
             }
             finally
             {
