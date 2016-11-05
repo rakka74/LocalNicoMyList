@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -527,6 +528,12 @@ namespace LocalNicoMyList
             }
 
             _myListItemCVS.SortDescriptions.Add(sortDescription);
+        }
+
+        private void _videoListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var myListItem = _videoListView.SelectedItem as MyListItem;
+            Process.Start(string.Format("http://www.nicovideo.jp/watch/{0}", myListItem.videoId));
         }
     }
 
