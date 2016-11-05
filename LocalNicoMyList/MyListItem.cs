@@ -20,6 +20,7 @@ namespace LocalNicoMyList
         private int _commentNum; // コメント数
         private int _mylistCounter; // マイリスト数
         public DateTime createTime { get; set; } // マイリスト追加日時
+        public DateTime? latestCommentTime { get; set; } // 最新コメント日時
 
         // Declare the event
         public event PropertyChangedEventHandler PropertyChanged;
@@ -103,7 +104,7 @@ namespace LocalNicoMyList
             this.createTime = record.createTime;
         }
 
-        public static MyListItem from(ThumbInfoResponse thumbInfoRes, DateTime createTime)
+        public static MyListItem from(ThumbInfoResponse thumbInfoRes, DateTime? latestCommentTime, DateTime createTime)
         {
             var status = NicoApi.convertStatus(thumbInfoRes.status, thumbInfoRes.error);
             if (NicoApi.Status.OK != status)
@@ -119,12 +120,13 @@ namespace LocalNicoMyList
             ret.viewCounter = thumbInfoRes.thumb.view_counter;
             ret.commentNum = thumbInfoRes.thumb.comment_num;
             ret.mylistCounter = thumbInfoRes.thumb.mylist_counter;
+            ret.latestCommentTime = latestCommentTime;
             ret.createTime = createTime;
 
             return ret;
         }
 
-        public void update(ThumbInfoResponse thumbInfoRes)
+        public void update(ThumbInfoResponse thumbInfoRes, DateTime? latestCommentTime)
         {
             this.title = thumbInfoRes.thumb.title;
             this.thumbnailUrl = thumbInfoRes.thumb.thumbnail_url;
@@ -133,6 +135,8 @@ namespace LocalNicoMyList
             this.viewCounter = thumbInfoRes.thumb.view_counter;
             this.commentNum = thumbInfoRes.thumb.comment_num;
             this.mylistCounter = thumbInfoRes.thumb.mylist_counter;
+            if (latestCommentTime.HasValue)
+                this.latestCommentTime = latestCommentTime;
         }
 
 

@@ -36,6 +36,7 @@ namespace LocalNicoMyList
                     "viewCounter integer, " +
                     "commentNum integer, " +
                     "mylistCounter integer, " +
+                    "latestCommentTime real, " +
                     "foreign key(folderId) references folder(id)" +
             ")";
             command.ExecuteNonQuery();
@@ -100,6 +101,7 @@ namespace LocalNicoMyList
             public int viewCounter; // 再生数
             public int commentNum; // コメント数
             public int mylistCounter; // マイリスト数
+            public DateTime? latestCommentTime; // 最新コメント日時
         }
 
         public List<MyListItemRecord> getMyListItem(long folderId)
@@ -121,7 +123,8 @@ namespace LocalNicoMyList
                         length = TimeSpan.FromSeconds((double)reader["length"]),
                         viewCounter = (int)((long)reader["viewCounter"]),
                         commentNum = (int)((long)reader["commentNum"]),
-                        mylistCounter = (int)((long)reader["mylistCounter"])
+                        mylistCounter = (int)((long)reader["mylistCounter"]),
+                        latestCommentTime = DateTimeExt.fromUnixTime((long)((double)reader["latestCommentTime"])),
                     });
                 }
             }
@@ -134,7 +137,7 @@ namespace LocalNicoMyList
             using (SQLiteTransaction trans = _conn.BeginTransaction())
             {
                 command = _conn.CreateCommand();
-                command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9})",
+                command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9}",
                         item.videoId,
                         item.createTime.toUnixTime(),
                         folderId,
@@ -145,6 +148,10 @@ namespace LocalNicoMyList
                         item.viewCounter,
                         item.commentNum,
                         item.mylistCounter);
+                if (item.latestCommentTime.HasValue)
+                    command.CommandText = string.Format(", {0})", item.latestCommentTime.Value.toUnixTime());
+                else
+                    command.CommandText = string.Format(", NULL)");
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -162,7 +169,7 @@ namespace LocalNicoMyList
                 foreach (var item in items)
                 {
                     command = _conn.CreateCommand();
-                    command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9})",
+                    command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9}",
                             item.videoId,
                             item.createTime.toUnixTime(),
                             folderId,
@@ -173,6 +180,11 @@ namespace LocalNicoMyList
                             item.viewCounter,
                             item.commentNum,
                             item.mylistCounter);
+                    if (item.latestCommentTime.HasValue)
+                        command.CommandText = string.Format("{0}, {1})", command.CommandText, item.latestCommentTime.Value.toUnixTime());
+                    else
+                        command.CommandText = string.Format("{0}, NULL)", command.CommandText);
+
                     command.ExecuteNonQuery();
                 }
                 trans.Commit();
@@ -187,13 +199,15 @@ namespace LocalNicoMyList
                 foreach (var item in items)
                 {
                     command = _conn.CreateCommand();
-                    command.CommandText = string.Format("UPDATE myListItem SET title='{0}', viewCounter={1}, commentNum={2}, mylistCounter={3}  WHERE folderId = {4} AND videoId='{5}'",
+                    command.CommandText = string.Format("UPDATE myListItem SET title='{0}', viewCounter={1}, commentNum={2}, mylistCounter={3}",
                             item.title.Replace("'", "''"),
                             item.viewCounter,
                             item.commentNum,
-                            item.mylistCounter,
-                            folderId,
-                            item.videoId);
+                            item.mylistCounter);
+                    if (item.latestCommentTime.HasValue)
+                        command.CommandText = string.Format("{0}, latestCommentTime={1}", command.CommandText, item.latestCommentTime.Value.toUnixTime());
+                    command.CommandText = string.Format("{0} WHERE folderId = {1} AND videoId='{2}'", command.CommandText, folderId, item.videoId);
+
                     command.ExecuteNonQuery();
                 }
                 trans.Commit();

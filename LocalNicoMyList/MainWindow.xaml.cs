@@ -1,5 +1,6 @@
 ﻿using Codeplex.Data;
 using LocalNicoMyList.nicoApi;
+using SharpHeaderCookie;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,19 +8,13 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using static LocalNicoMyList.DBAccessor;
 
 namespace LocalNicoMyList
@@ -92,9 +87,9 @@ namespace LocalNicoMyList
     {
         ObservableCollection<FolderItem> _folderListItemSource;
         ObservableCollection<MyListItem> _myListItemSource;
+        string _cookieHeader;
         NicoApi _nicoApi;
         DBAccessor _dbAccessor;
-        //        long _selectedFolderId;
         FolderItem _selectedFolderItem;
         CollectionViewSource _myListItemCVS;
         public ObservableCollection<SortItem> _sortCBItems;
@@ -148,10 +143,8 @@ namespace LocalNicoMyList
             _sortCBItems.Add(new SortItem("投稿が古い順", SortKind.PostTimeAscend));
             _sortCBItems.Add(new SortItem("再生が多い順", SortKind.ViewCountDescend));
             _sortCBItems.Add(new SortItem("再生が少ない順", SortKind.ViewCountAscend));
-#if false
             _sortCBItems.Add(new SortItem("コメントが新しい順", SortKind.LatestCommentTimeDescend));
             _sortCBItems.Add(new SortItem("コメントが古い順", SortKind.LatestCommentTimeAscend));
-#endif
             _sortCBItems.Add(new SortItem("コメントが多い順", SortKind.CommentCountDescend));
             _sortCBItems.Add(new SortItem("コメントが少ない順", SortKind.CommentCountAscend));
             _sortCBItems.Add(new SortItem("マイリスト登録が多い順", SortKind.MyListCountDescend));
@@ -168,6 +161,8 @@ namespace LocalNicoMyList
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _folderListView.SelectedIndex = 0;
+
+            this.prepareCookie();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -184,6 +179,23 @@ namespace LocalNicoMyList
             Properties.Settings.Default.Save();
         }
 
+         private void prepareCookie()
+        {
+            IGetBrowserCookie[] getBrowserCookies = LibHeaderCookie.Instance();
+            Uri uri;
+            foreach (IGetBrowserCookie getBrowserCookie in getBrowserCookies)
+            {
+                if (Uri.TryCreate("http://live.nicovideo.jp/", UriKind.Absolute, out uri))
+                {
+                    _cookieHeader = getBrowserCookie.CookieHeader(uri, "user_session");
+                    if (null != _cookieHeader)
+                        return;
+                }
+            }
+            //MessageBox.Show("最新コメント日時を取得するためには適当なブラウザでニコニコ動画にログインしている必要があります。");
+        }
+
+
         private void _videoListView_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent("UniformResourceLocator") ||
@@ -191,6 +203,21 @@ namespace LocalNicoMyList
             {
                 e.Effects = DragDropEffects.Copy;
             }
+        }
+
+        private async Task<DateTime?> getLatestCommentTimeAsync(string videoId)
+        {
+            DateTime? latestCommentTime = null;
+            if (null != _cookieHeader)
+            {
+                latestCommentTime = await _nicoApi.getLatestCommentTimeAsync(videoId, _cookieHeader);
+                if (!latestCommentTime.HasValue)
+                {
+                    // メッセージでも表示する？
+                    _cookieHeader = null;
+                }
+            }
+            return latestCommentTime;
         }
 
         private async void _videoListView_Drop(object sender, DragEventArgs e)
@@ -202,7 +229,8 @@ namespace LocalNicoMyList
             {
                 string videoId = match.Groups[1].Value;
                 ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                var item = MyListItem.from(res, DateTime.Now);
+                DateTime? latestCommentTime = null;// await this.getLatestCommentTimeAsync(videoId);
+                var item = MyListItem.from(res, latestCommentTime, DateTime.Now);
                 if (null != item)
                 {
                     _myListItemSource.Add(item);
@@ -260,7 +288,8 @@ namespace LocalNicoMyList
                     var videoId = item["item_data"]["video_id"];
                     var createTime = (long)item["create_time"];
                     ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                    var myListItem = MyListItem.from(res, DateTimeExt.fromUnixTime(createTime));
+                    DateTime? latestCommentTime = null;// await this.getLatestCommentTimeAsync(videoId);
+                    var myListItem = MyListItem.from(res, latestCommentTime, DateTimeExt.fromUnixTime(createTime));
                     if (null != myListItem)
                     {
                         myListItems.Add(myListItem);
@@ -318,9 +347,10 @@ namespace LocalNicoMyList
                 {
                     var videoId = item.videoId;
                     ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
+                    DateTime? latestCommentTime = null;// await this.getLatestCommentTimeAsync(videoId);
 
                     MyListItem myListItem = _myListItemSource.First(_ => _.videoId.Equals(videoId));
-                    myListItem.update(res);
+                    myListItem.update(res, latestCommentTime);
 
                     Interlocked.Add(ref count, 1);
                     progress.Report(count);
@@ -356,46 +386,6 @@ namespace LocalNicoMyList
                 _myListItemSource.Add(new MyListItem(record));
             }
 
-            _myListItemCVS.Source = _myListItemSource;
-        }
-
-        CancellationTokenSource _refreshMyListCts;
-
-        // カレントフォルダのマイリストの動画情報を取得し直す
-        async Task refreshMyList()
-        {
-            _myListItemCVS.Source = null;  // 表示をクリア
-
-            List<MyListItemRecord> ret = _dbAccessor.getMyListItem(_selectedFolderItem.id);
-
-            //var myListItems = new ObservableCollection<MyListItem>();
-            var myListItems = new System.Collections.Concurrent.ConcurrentBag<MyListItem>();
-
-            // ニコニコ動画APIで動画情報を取得
-            Func<MyListItemRecord, Task> action = async (myListItemRecord) =>
-            {
-                var videoId = myListItemRecord.videoId;
-                var res = await _nicoApi.getThumbInfo(videoId);
-                var myListItem = MyListItem.from(res, myListItemRecord.createTime);
-                if (null != myListItem)
-                {
-                    myListItems.Add(myListItem);
-                }
-            };
-
-            if (null != _refreshMyListCts)
-            {
-                _refreshMyListCts.Cancel();
-            }
-
-            _refreshMyListCts = new CancellationTokenSource();
-            var token = _refreshMyListCts.Token;
-            await ret.ForEachAsync(action, 10, token);
-
-            if (token.IsCancellationRequested)
-                return;
-
-            _myListItemSource = new ObservableCollection<MyListItem>(myListItems);
             _myListItemCVS.Source = _myListItemSource;
         }
 
@@ -467,22 +457,20 @@ namespace LocalNicoMyList
                         Direction = ListSortDirection.Ascending
                     };
                     break;
-#if false
                 case SortKind.LatestCommentTimeDescend:
                     sortDescription = new SortDescription
                     {
-                        PropertyName = "",
+                        PropertyName = "latestCommentTime",
                         Direction = ListSortDirection.Descending
                     };
                     break;
                 case SortKind.LatestCommentTimeAscend:
                     sortDescription = new SortDescription
                     {
-                        PropertyName = "",
+                        PropertyName = "latestCommentTime",
                         Direction = ListSortDirection.Ascending
                     };
                     break;
-#endif
                 case SortKind.CommentCountDescend:
                     sortDescription = new SortDescription
                     {
