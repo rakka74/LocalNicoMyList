@@ -179,6 +179,28 @@ namespace LocalNicoMyList
             }
         }
 
+        public void updateMyListItems(IEnumerable<MyListItem> items, long folderId)
+        {
+            SQLiteCommand command;
+            using (SQLiteTransaction trans = _conn.BeginTransaction())
+            {
+                foreach (var item in items)
+                {
+                    command = _conn.CreateCommand();
+                    command.CommandText = string.Format("UPDATE myListItem SET title='{0}', viewCounter={1}, commentNum={2}, mylistCounter={3}  WHERE folderId = {4} AND videoId='{5}'",
+                            item.title.Replace("'", "''"),
+                            item.viewCounter,
+                            item.commentNum,
+                            item.mylistCounter,
+                            folderId,
+                            item.videoId);
+                    command.ExecuteNonQuery();
+                }
+                trans.Commit();
+            }
+        }
+
+
         public void updateCount(long folderId, int count)
         {
             using (SQLiteTransaction trans = _conn.BeginTransaction())

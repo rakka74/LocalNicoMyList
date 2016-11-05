@@ -291,6 +291,58 @@ namespace LocalNicoMyList
             }
         }
 
+        private async void refreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            var progressWindow = new ProgressWindow();
+            var progress = new Progress<int>(value =>
+            {
+                progressWindow.ProgressBar.Value = value;
+            });
+
+            var cts = new CancellationTokenSource();
+            progressWindow.Closed += (_, __) => cts.Cancel();
+
+            var task = refreshMyListAsync(progressWindow, cts.Token, progress);
+            progressWindow.ShowDialog();
+            await task;
+        }
+
+        // カレントフォルダの動画情報を取得し直す
+        private async Task refreshMyListAsync(ProgressWindow progressWindow, CancellationToken token, IProgress<int> progress)
+        {
+            try
+            {
+                int count = 0;
+                Func<MyListItem, Task> action = async (item) =>
+                {
+                    var videoId = item.videoId;
+                    ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
+
+                    MyListItem myListItem = _myListItemSource.First(_ => _.videoId.Equals(videoId));
+                    myListItem.update(res);
+
+                    Interlocked.Add(ref count, 1);
+                    progress.Report(count);
+                };
+
+                List<MyListItem> myListItems = _myListItemSource.ToList();
+                progressWindow.ProgressBar.MaxHeight = myListItems.Count;
+
+                await myListItems.ForEachAsync(action, 10, token);
+
+                // DBを更新
+                _dbAccessor.updateMyListItems(_myListItemSource, _selectedFolderItem.id);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                progressWindow.Close();
+            }
+        }
+
         private void _folderListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             FolderItem item = e.AddedItems[0] as FolderItem;

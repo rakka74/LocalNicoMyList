@@ -19,7 +19,7 @@
                 </TextBlock>
             </StackPanel>
         </DataTemplate>
-        <DataTemplate x:Key="DataTemplate1">
+        <DataTemplate x:Key="VideoListDataTemplate">
             <StackPanel Orientation="Horizontal" Margin="0,5">
                 <Image Source="{Binding thumbnailUrl}" Width="100" Height="76" />
                 <StackPanel Orientation="Vertical" Margin="10,0,0,0">
@@ -54,9 +54,17 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <ComboBox x:Name="sortCB" Grid.Row="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5"
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <ComboBox x:Name="sortCB" Grid.Column="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5"
                       ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
-            <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource DataTemplate1}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"></ListView>
+                <Button Grid.Column="2" Margin="0,5,10,5" Padding="20,0" Click="refreshButton_Click">更新</Button>
+            </Grid>
+            <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"></ListView>
         </Grid>
     </Grid>
 </Window>
