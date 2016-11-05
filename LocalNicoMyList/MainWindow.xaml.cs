@@ -3,6 +3,7 @@ using LocalNicoMyList.nicoApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -62,6 +63,7 @@ namespace LocalNicoMyList
         DBAccessor _dbAccessor;
         //        long _selectedFolderId;
         FolderItem _selectedFolderItem;
+        CollectionViewSource _myListItemCVS;
 
         //class VideoInfo
         //{
@@ -102,6 +104,18 @@ namespace LocalNicoMyList
             }
 
             _folderListView.DataContext = _folderListItemSource;
+
+            _myListItemCVS = new CollectionViewSource();
+            _myListItemCVS.Source = _myListItemSource;
+            _videoListView.DataContext = _myListItemCVS;
+
+            // とりあえず再生数でソート
+            var sortDescription = new SortDescription
+            {
+                PropertyName = "viewCounter",
+                Direction = ListSortDirection.Ascending
+            };
+            _myListItemCVS.SortDescriptions.Add(sortDescription);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -215,7 +229,7 @@ namespace LocalNicoMyList
                 List<MyListItem> list = _myListItemSource.ToList();
                 list.AddRange(myListItems);
                 _myListItemSource = new ObservableCollection<MyListItem>(list);
-                _videoListView.DataContext = _myListItemSource;
+                _myListItemCVS.Source = _myListItemSource;
 
                 _selectedFolderItem.count = list.Count;
                 _dbAccessor.updateCount(_selectedFolderItem.id, list.Count);
@@ -244,7 +258,7 @@ namespace LocalNicoMyList
         // カレントフォルダのマイリストの動画情報を取得し直す
         async Task refreshMyList()
         {
-            _videoListView.DataContext = null;  // 表示をクリア
+            _myListItemCVS.Source = null;  // 表示をクリア
 
             List<MyListItemRecord> ret = _dbAccessor.getMyListItem(_selectedFolderItem.id);
 
@@ -276,7 +290,7 @@ namespace LocalNicoMyList
                 return;
 
             _myListItemSource = new ObservableCollection<MyListItem>(myListItems);
-            _videoListView.DataContext = _myListItemSource;
+            _myListItemCVS.Source = _myListItemSource;
         }
     }
 
