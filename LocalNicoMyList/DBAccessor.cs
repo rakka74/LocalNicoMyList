@@ -111,13 +111,16 @@ namespace LocalNicoMyList
             public int commentNum; // コメント数
             public int mylistCounter; // マイリスト数
             public DateTime? latestCommentTime; // 最新コメント日時
+            // 以下はgetflvInfoの情報
+            public string threadId;
+            public string messageServerUrl;
         }
 
         public List<MyListItemRecord> getMyListItem(long folderId)
         {
             List<MyListItemRecord> ret = new List<MyListItemRecord>();
             SQLiteCommand cmd = _conn.CreateCommand();
-            cmd.CommandText = string.Format("SELECT * FROM myListItem WHERE folderId = {0}", folderId);
+            cmd.CommandText = string.Format("SELECT * FROM myListItem JOIN getflvInfo ON myListItem.videoId = getflvInfo.videoId WHERE folderId = {0}", folderId);
             using (SQLiteDataReader reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
@@ -132,7 +135,9 @@ namespace LocalNicoMyList
                         length = TimeSpan.FromSeconds((double)reader["length"]),
                         viewCounter = (int)((long)reader["viewCounter"]),
                         commentNum = (int)((long)reader["commentNum"]),
-                        mylistCounter = (int)((long)reader["mylistCounter"])
+                        mylistCounter = (int)((long)reader["mylistCounter"]),
+                        threadId = reader["thread_id"].ToString(),
+                        messageServerUrl = reader["ms"].ToString(),
                     });
                     var latestCommentTime = reader["latestCommentTime"];
                     if (!(latestCommentTime is System.DBNull))

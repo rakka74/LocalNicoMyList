@@ -20,7 +20,9 @@ namespace LocalNicoMyList
         private int _commentNum; // コメント数
         private int _mylistCounter; // マイリスト数
         public DateTime createTime { get; set; } // マイリスト追加日時
-        public DateTime? latestCommentTime { get; set; } // 最新コメント日時
+        private DateTime? _latestCommentTime; // 最新コメント日時
+        private string _threadId;
+        private string _messageServerUrl;
 
         // Declare the event
         public event PropertyChangedEventHandler PropertyChanged;
@@ -75,6 +77,28 @@ namespace LocalNicoMyList
                 OnPropertyChanged("mylistCounter");
             }
         }
+        public DateTime? latestCommentTime
+        {
+            get { return _latestCommentTime; }
+            set
+            {
+                _latestCommentTime = value;
+                // Call OnPropertyChanged whenever the property is updated
+                OnPropertyChanged("latestCommentTime");
+            }
+        }
+        public string getflv
+        {
+            get { return (null != _threadId) ? "○" : "×"; }
+        }
+        public void setGetflv(string threadId, string ms)
+        {
+            _threadId = threadId;
+            _messageServerUrl = ms;
+            // Call OnPropertyChanged whenever the property is updated
+            OnPropertyChanged("getflv");
+        }
+
 
 
 #if false
@@ -102,6 +126,8 @@ namespace LocalNicoMyList
             this.commentNum = record.commentNum;
             this.mylistCounter = record.mylistCounter;
             this.createTime = record.createTime;
+            this.latestCommentTime = record.latestCommentTime;
+            this.setGetflv(record.threadId, record.messageServerUrl);
         }
 
         public static MyListItem from(ThumbInfoResponse thumbInfoRes, DateTime? latestCommentTime, DateTime createTime)
