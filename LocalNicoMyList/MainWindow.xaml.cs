@@ -97,6 +97,10 @@ namespace LocalNicoMyList
         CollectionViewSource _myListItemCVS;
         public ObservableCollection<SortItem> _sortCBItems;
 
+        Task _getflvTask;
+        CancellationTokenSource _getflvCTS;
+        ConcurrentQueue<string> _getflvQueue;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -173,11 +177,16 @@ namespace LocalNicoMyList
                 _getflvQueue.Enqueue(item.videoId);
             }
 
-            this.startGetflvTask();
+            _getflvCTS = new CancellationTokenSource();
+            _getflvTask = this.startGetflvTask();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // getflvのバックグランド処理をキャンセルして終了待機。待機する必要ないかも？
+            _getflvCTS.Cancel();
+            await _getflvTask;
+
             _dbAccessor.Dispose();
 
             // ウィンドウの値を Settings に格納
@@ -457,45 +466,50 @@ namespace LocalNicoMyList
             }
         }
 
-        ConcurrentQueue<string> _getflvQueue;
-
-        private async void startGetflvTask()
+        private async Task startGetflvTask()
         {
-            while(true)
+            try
             {
-                string videoId;
-                if (null != _cookieHeader && _getflvQueue.TryDequeue(out videoId))
+                while (!_getflvCTS.IsCancellationRequested)
                 {
-                    int waitTime = 1000 * 30;
-                    while (true)
+                    string videoId;
+                    if (null != _cookieHeader && _getflvQueue.TryDequeue(out videoId))
                     {
-                        Console.WriteLine(videoId);
-                        NameValueCollection nameValues = await _nicoApi.getflvAsync(videoId, _cookieHeader);
-                        string threadId = nameValues.Get("thread_id");
-                        string messageServerUrl = nameValues.Get("ms");
-                        if (null != threadId && null != messageServerUrl)
+                        int waitTime = 1000 * 30;
+                        while (!_getflvCTS.IsCancellationRequested)
                         {
-                            _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
-                            break;
-                        }
-                        string closed = nameValues["closed"];
-                        if (null != closed && closed.Equals("1"))
-                        {
-                            // ログアウトされてる
-                            _cookieHeader = null;
-                            _getflvQueue.Enqueue(videoId);
-                            break;
-                        }
-                        string error = nameValues["error"];
-                        if (null != error && error.Equals("access_locked")) {
-                            // アクセス制限
-                            Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
-                            await Task.Delay(waitTime);
-                            waitTime += 1000;
+                            Console.WriteLine(videoId);
+                            NameValueCollection nameValues = await _nicoApi.getflvAsync(videoId, _cookieHeader);
+                            string threadId = nameValues.Get("thread_id");
+                            string messageServerUrl = nameValues.Get("ms");
+                            if (null != threadId && null != messageServerUrl)
+                            {
+                                _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
+                                break;
+                            }
+                            string closed = nameValues["closed"];
+                            if (null != closed && closed.Equals("1"))
+                            {
+                                // ログアウトされてる
+                                _cookieHeader = null;
+                                _getflvQueue.Enqueue(videoId);
+                                break;
+                            }
+                            string error = nameValues["error"];
+                            if (null != error && error.Equals("access_locked"))
+                            {
+                                // アクセス制限
+                                Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
+                                await Task.Delay(waitTime, _getflvCTS.Token);
+                                waitTime += 1000;
+                            }
                         }
                     }
+                    await Task.Delay(1000, _getflvCTS.Token);
                 }
-                await Task.Delay(1000);
+            }
+            catch(TaskCanceledException e)
+            {
             }
         }
 
