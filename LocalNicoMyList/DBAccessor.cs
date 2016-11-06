@@ -136,8 +136,8 @@ namespace LocalNicoMyList
                         viewCounter = (int)((long)reader["viewCounter"]),
                         commentNum = (int)((long)reader["commentNum"]),
                         mylistCounter = (int)((long)reader["mylistCounter"]),
-                        threadId = reader["thread_id"].ToString(),
-                        messageServerUrl = reader["ms"].ToString(),
+                        threadId = (reader["thread_id"].GetType() != typeof(DBNull)) ? reader["thread_id"].ToString() : null,
+                        messageServerUrl = (reader["ms"].GetType() != typeof(DBNull)) ? reader["ms"].ToString() : null
                     };
                     var latestCommentTime = reader["latestCommentTime"];
                     if (!(latestCommentTime is System.DBNull))

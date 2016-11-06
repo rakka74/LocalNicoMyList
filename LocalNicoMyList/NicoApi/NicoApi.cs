@@ -102,19 +102,27 @@ namespace LocalNicoMyList.nicoApi
 
         public async Task<DateTime?> getLatestCommentTimeAsync(string threadId, string messageServerUrl)
         {
-            var hc = new HttpClient();
-            var url = string.Format("{0}thread?version=20090904&thread={1}&res_from=-1", messageServerUrl, threadId);
-            var ret = await hc.GetStringAsync(url);
+            try
+            {
+                var hc = new HttpClient();
+                var url = string.Format("{0}thread?version=20090904&thread={1}&res_from=-1", messageServerUrl, threadId);
+                var ret = await hc.GetStringAsync(url);
 
-            XmlDocument xdoc = new XmlDocument();
-            xdoc.LoadXml(ret);
-            XmlElement root = xdoc.DocumentElement;
-            XmlNode chat = root?.SelectSingleNode("chat");
-            if (null == chat)   // コメントが存在しない場合
-                return DateTimeExt.fromUnixTime(0);
-            return DateTimeExt.fromUnixTime(long.Parse(chat.Attributes["date"].Value));
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.LoadXml(ret);
+                XmlElement root = xdoc.DocumentElement;
+                XmlNode chat = root?.SelectSingleNode("chat");
+                if (null == chat)   // コメントが存在しない場合
+                    return DateTimeExt.fromUnixTime(0);
+                return DateTimeExt.fromUnixTime(long.Parse(chat.Attributes["date"].Value));
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("NicoApi.getLatestCommentTimeAsync()");
+                Console.WriteLine(e);
+            }
+            return null;
         }
-
 
         NameValueCollection parseQueryString(string query)
         {
