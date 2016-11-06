@@ -36,10 +36,12 @@
                         <TextBlock Text="{Binding commentNum}" FontSize="12" FontWeight="Bold"/>
                         <TextBlock Text="マイ：" FontSize="12" Margin="15,0,0,0" />
                         <TextBlock Text="{Binding mylistCounter}" FontSize="12" FontWeight="Bold"/>
-                        <TextBlock Text="getflv：" FontSize="12" Margin="15,0,0,0" />
-                        <TextBlock Text="{Binding getflv}" FontSize="12" FontWeight="Bold"/>
-                        <TextBlock Text="最新コメ：" FontSize="12" Margin="15,0,0,0" />
-                        <TextBlock Text="{Binding latestCommentTime, StringFormat=yyyy年MM月dd日\ hh時mm分}" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="getflv：" FontSize="10" Foreground="Gray"/>
+                        <TextBlock Text="{Binding getflv}" FontSize="10" Foreground="Gray"/>
+                        <TextBlock Text="最新コメ：" FontSize="10" Foreground="Gray" Margin="15,0,0,0" />
+                        <TextBlock Text="{Binding latestCommentTime, StringFormat=yyyy年MM月dd日\ hh時mm分}" FontSize="10" Foreground="Gray" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
