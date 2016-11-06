@@ -1,5 +1,6 @@
 ﻿using Codeplex.Data;
 using LocalNicoMyList.nicoApi;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using SharpHeaderCookie;
 using System;
 using System.Collections.Concurrent;
@@ -201,18 +202,32 @@ namespace LocalNicoMyList
 
          private void prepareCookie()
         {
-            IGetBrowserCookie[] getBrowserCookies = LibHeaderCookie.Instance();
-            Uri uri;
-            foreach (IGetBrowserCookie getBrowserCookie in getBrowserCookies)
-            {
-                if (Uri.TryCreate("http://live.nicovideo.jp/", UriKind.Absolute, out uri))
+            while (true) {
+                IGetBrowserCookie[] getBrowserCookies = LibHeaderCookie.Instance();
+                Uri uri;
+                foreach (IGetBrowserCookie getBrowserCookie in getBrowserCookies)
                 {
-                    _cookieHeader = getBrowserCookie.CookieHeader(uri, "user_session");
-                    if (null != _cookieHeader)
-                        return;
+                    if (Uri.TryCreate("http://live.nicovideo.jp/", UriKind.Absolute, out uri))
+                    {
+                        _cookieHeader = getBrowserCookie.CookieHeader(uri, "user_session");
+                        if (null != _cookieHeader)
+                            return;
+                    }
+                }
+
+                var dialog = new TaskDialog();
+                dialog.Caption = "LocalNicoMyList";
+                dialog.InstructionText = "クッキーの取得ができませんでした。";
+                dialog.Text = "最新コメント日時を取得するのにニコニコ動画にログインしているクッキーが必要になります。\n" +
+                    "適当なブラウザでニコニコ動画にログインした後、再試行ボタンを押してください。";
+                dialog.Icon = TaskDialogStandardIcon.Information;
+                dialog.StandardButtons = TaskDialogStandardButtons.Retry | TaskDialogStandardButtons.Cancel;
+                var result = dialog.Show();
+                if (TaskDialogResult.Cancel == result)
+                {
+                    break;
                 }
             }
-            //MessageBox.Show("最新コメント日時を取得するためには適当なブラウザでニコニコ動画にログインしている必要があります。");
         }
 
 
@@ -412,57 +427,6 @@ namespace LocalNicoMyList
             catch (Exception e)
             {
                 Console.WriteLine(e);
-            }
-            finally
-            {
-                progressWindow.Close();
-            }
-        }
-
-        private async void updateLatestCommentTimeButton_Click(object sender, RoutedEventArgs e)
-        {
-            var progressWindow = new ProgressWindow();
-            var progress = new Progress<int>(value =>
-            {
-                progressWindow.ProgressBar.Value = value;
-            });
-
-            var cts = new CancellationTokenSource();
-            progressWindow.Closed += (_, __) => cts.Cancel();
-
-            var task = updateLatestCommentTimeAsync(progressWindow, cts.Token, progress);
-            progressWindow.ShowDialog();
-            await task;
-        }
-
-        private async Task updateLatestCommentTimeAsync(ProgressWindow progressWindow, CancellationToken token, IProgress<int> progress)
-        {
-            try
-            {
-                progressWindow.ProgressBar.MaxHeight = _myListItemSource.Count;
-                int count = 0;
-                foreach (MyListItem item in _myListItemSource)
-                {
-                    int waitTime = 1000*30;
-                    while (true)
-                    {
-                        try
-                        {
-                            Console.WriteLine(item.videoId);
-                            DateTime? latestCommentTime = await this.getLatestCommentTimeAsync(item.videoId);
-                            ++count;
-                            progress.Report(count);
-                            break;
-                        }
-                        catch (AccessLockedException e)
-                        {
-                            Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
-                            await Task.Delay(waitTime);
-                            waitTime += 1000;
-                        }
-                    }
-                    await Task.Delay(1000);
-                }
             }
             finally
             {
