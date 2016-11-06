@@ -453,8 +453,7 @@ namespace LocalNicoMyList
                             if (null != threadId && null != messageServerUrl)
                             {
                                 _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
-                                _myListItemSource.First((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
-
+                                _myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
                                 break;
                             }
                             string closed = nameValues["closed"];
