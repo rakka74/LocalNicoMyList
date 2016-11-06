@@ -40,6 +40,14 @@ namespace LocalNicoMyList
                     "foreign key(folderId) references folder(id)" +
             ")";
             command.ExecuteNonQuery();
+
+            command = _conn.CreateCommand();
+            command.CommandText = "CREATE TABLE IF NOT EXISTS getflvInfo (" +
+                    "videoId text PRIMARY KEY, " +
+                    "ms text, " +
+                    "thread_id text" +
+            ")";
+            command.ExecuteNonQuery();
         }
 
         public void Dispose()
@@ -90,6 +98,7 @@ namespace LocalNicoMyList
             return ret;
         }
 
+        #region myListItem
         public class MyListItemRecord
         {
             public string videoId;
@@ -151,9 +160,9 @@ namespace LocalNicoMyList
                         item.commentNum,
                         item.mylistCounter);
                 if (item.latestCommentTime.HasValue)
-                    command.CommandText = string.Format(", {0})", item.latestCommentTime.Value.toUnixTime());
+                    command.CommandText = string.Format("{0}, {1})", command.CommandText, item.latestCommentTime.Value.toUnixTime());
                 else
-                    command.CommandText = string.Format(", NULL)");
+                    command.CommandText = string.Format("{0}, NULL)", command.CommandText);
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -216,6 +225,15 @@ namespace LocalNicoMyList
             }
         }
 
+        public bool isExistMyListItem(string videoId, long folderId)
+        {
+            SQLiteCommand command;
+            command = _conn.CreateCommand();
+            command.CommandText = string.Format("SELECT COUNT(*) FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId, folderId);
+            return 0 < Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        #endregion
 
         public void updateCount(long folderId, int count)
         {
@@ -229,6 +247,73 @@ namespace LocalNicoMyList
                 trans.Commit();
             }
         }
+
+        #region getflv
+
+        public class GetflvInfoRecord
+        {
+            public string videoId;
+            public string messageServerUrl;
+            public string threadId;
+        }
+
+
+        public void addEmptyGetflvInfo(string videoId)
+        {
+            SQLiteCommand command;
+            using (SQLiteTransaction trans = _conn.BeginTransaction())
+            {
+                command = _conn.CreateCommand();
+                command.CommandText = string.Format("INSERT INTO getflvInfo (videoId) VALUES ('{0}')", videoId);
+                command.ExecuteNonQuery();
+                trans.Commit();
+            }
+        }
+
+        public void updateGetflvInfo(string videoId, string threadId, string ms)
+        {
+            using (SQLiteTransaction trans = _conn.BeginTransaction())
+            {
+                SQLiteCommand command = _conn.CreateCommand();
+                command.CommandText = string.Format("UPDATE getflvInfo SET thread_id = '{0}', ms = '{1}' WHERE videoId = '{2}'",
+                        threadId,
+                        ms,
+                        videoId);
+                command.ExecuteNonQuery();
+                trans.Commit();
+            }
+        }
+
+        public bool isExistGetflvInfo(string videoId)
+        {
+            SQLiteCommand command;
+            command = _conn.CreateCommand();
+            command.CommandText = string.Format("SELECT COUNT(*) FROM getflvInfo WHERE videoId = '{0}'", videoId);
+            return 0 < Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        public List<GetflvInfoRecord> getEmptyGetflvInfo()
+        {
+            List<GetflvInfoRecord> ret = new List<GetflvInfoRecord>();
+
+            SQLiteCommand command;
+            command = _conn.CreateCommand();
+            command.CommandText = string.Format("SELECT * FROM getflvInfo WHERE ms IS NULL");
+            using (SQLiteDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ret.Add(new GetflvInfoRecord()
+                    {
+                        videoId = reader["videoId"].ToString(),
+                        messageServerUrl = reader["ms"].ToString(),
+                        threadId = reader["thread_id"].ToString(),
+                    });
+                }
+            }
+            return ret;
+        }
+        #endregion
 
     }
 }

@@ -85,6 +85,20 @@ namespace LocalNicoMyList.nicoApi
             return null;
         }
 
+        public async Task<NameValueCollection> getflvAsync(string videoId, string cookieHeader)
+        {
+            var handler = new HttpClientHandler()
+            {
+                UseCookies = false
+            };
+            var hc = new HttpClient(handler);
+            hc.DefaultRequestHeaders.Add("Cookie", cookieHeader);
+            string url = string.Format("http://flapi.nicovideo.jp/api/getflv/{0}", videoId);
+            string ret = await hc.GetStringAsync(url);
+            return this.parseQueryString(ret);
+        }
+
+
         NameValueCollection parseQueryString(string query)
         {
             var ret = new NameValueCollection();

@@ -2,8 +2,10 @@
 using LocalNicoMyList.nicoApi;
 using SharpHeaderCookie;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -164,6 +166,14 @@ namespace LocalNicoMyList
             _folderListView.SelectedIndex = 0;
 
             this.prepareCookie();
+
+            _getflvQueue = new ConcurrentQueue<string>();
+            foreach (var item in _dbAccessor.getEmptyGetflvInfo())
+            {
+                _getflvQueue.Enqueue(item.videoId);
+            }
+
+            this.startGetflvTask();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -234,11 +244,18 @@ namespace LocalNicoMyList
                 var item = MyListItem.from(res, latestCommentTime, DateTime.Now);
                 if (null != item)
                 {
-                    _myListItemSource.Add(item);
-                    _dbAccessor.addMyListItem(item, _selectedFolderItem.id);
-
-                    _selectedFolderItem.count = _myListItemSource.Count;
-                    _dbAccessor.updateCount(_selectedFolderItem.id, _myListItemSource.Count);
+                    if (!_dbAccessor.isExistMyListItem(videoId, _selectedFolderItem.id))
+                    {
+                        _myListItemSource.Add(item);
+                        _dbAccessor.addMyListItem(item, _selectedFolderItem.id);
+                        if (!_dbAccessor.isExistGetflvInfo(videoId))
+                        {
+                            _dbAccessor.addEmptyGetflvInfo(videoId);
+                            _getflvQueue.Enqueue(videoId);
+                        }
+                        _selectedFolderItem.count = _myListItemSource.Count;
+                        _dbAccessor.updateCount(_selectedFolderItem.id, _myListItemSource.Count);
+                    }
                 }
             }
             match = Regex.Match(uri, @"mylist/[0-9]+");
@@ -264,8 +281,14 @@ namespace LocalNicoMyList
                         progressWindow.Closed += (_, __) => cts.Cancel();
 
                         var jsonItems = (dynamic[])json;
-                        progressWindow.ProgressBar.MaxHeight = jsonItems.Length;
-                        var task = importMyListAsync(jsonItems, progressWindow, cts.Token, progress);
+                        var jsonItems2 = jsonItems.Where((item) => {
+                            var videoId = item["item_data"]["video_id"];
+                            return !_dbAccessor.isExistMyListItem(videoId, _selectedFolderItem.id);
+                        });
+
+
+                        progressWindow.ProgressBar.Maximum = (double)jsonItems2.Count();
+                        var task = importMyListAsync(jsonItems2, progressWindow, cts.Token, progress);
                         progressWindow.ShowDialog();
                         await task;
                     }
@@ -279,7 +302,7 @@ namespace LocalNicoMyList
 
         // jsonに含まれるマイリスト情報をカレントフォルダに追加。
         // DBとビューモデルに追加。
-        async Task importMyListAsync(dynamic[] jsonItems, ProgressWindow progressWindow, CancellationToken token, IProgress<int> progress)
+        async Task importMyListAsync(IEnumerable<dynamic> jsonItems, ProgressWindow progressWindow, CancellationToken token, IProgress<int> progress)
         {
             try
             {
@@ -302,6 +325,14 @@ namespace LocalNicoMyList
 
                 // DBに追加
                 _dbAccessor.addMyListItems(myListItems, _selectedFolderItem.id);
+                foreach (var item in myListItems)
+                {
+                    if (!_dbAccessor.isExistGetflvInfo(item.videoId))
+                    {
+                        _dbAccessor.addEmptyGetflvInfo(item.videoId);
+                        _getflvQueue.Enqueue(item.videoId);
+                    }
+                }
                 // ビューモデルに追加
                 List<MyListItem> list = _myListItemSource.ToList();
                 list.AddRange(myListItems);
@@ -423,6 +454,48 @@ namespace LocalNicoMyList
             finally
             {
                 progressWindow.Close();
+            }
+        }
+
+        ConcurrentQueue<string> _getflvQueue;
+
+        private async void startGetflvTask()
+        {
+            while(true)
+            {
+                string videoId;
+                if (null != _cookieHeader && _getflvQueue.TryDequeue(out videoId))
+                {
+                    int waitTime = 1000 * 30;
+                    while (true)
+                    {
+                        Console.WriteLine(videoId);
+                        NameValueCollection nameValues = await _nicoApi.getflvAsync(videoId, _cookieHeader);
+                        string threadId = nameValues.Get("thread_id");
+                        string messageServerUrl = nameValues.Get("ms");
+                        if (null != threadId && null != messageServerUrl)
+                        {
+                            _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
+                            break;
+                        }
+                        string closed = nameValues["closed"];
+                        if (null != closed && closed.Equals("1"))
+                        {
+                            // ログアウトされてる
+                            _cookieHeader = null;
+                            _getflvQueue.Enqueue(videoId);
+                            break;
+                        }
+                        string error = nameValues["error"];
+                        if (null != error && error.Equals("access_locked")) {
+                            // アクセス制限
+                            Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
+                            await Task.Delay(waitTime);
+                            waitTime += 1000;
+                        }
+                    }
+                }
+                await Task.Delay(1000);
             }
         }
 
