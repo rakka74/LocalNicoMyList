@@ -388,7 +388,11 @@ namespace LocalNicoMyList
                 {
                     var videoId = item.videoId;
                     ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                    DateTime? latestCommentTime = null;// await this.getLatestCommentTimeAsync(videoId);
+                    DateTime? latestCommentTime = null;
+                    if (null != item.threadId)
+                    {
+                        latestCommentTime = await _nicoApi.getLatestCommentTimeAsync(item.threadId, item.messageServerUrl);
+                    }
 
                     MyListItem myListItem = _myListItemSource.First(_ => _.videoId.Equals(videoId));
                     myListItem.update(res, latestCommentTime);
@@ -398,7 +402,7 @@ namespace LocalNicoMyList
                 };
 
                 List<MyListItem> myListItems = _myListItemSource.ToList();
-                progressWindow.ProgressBar.MaxHeight = myListItems.Count;
+                progressWindow.ProgressBar.Maximum = myListItems.Count;
 
                 await myListItems.ForEachAsync(action, 10, token);
 

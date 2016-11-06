@@ -99,6 +99,9 @@ namespace LocalNicoMyList
             OnPropertyChanged("getflv");
         }
 
+        public string threadId { get { return _threadId; } }
+        public string messageServerUrl { get { return _messageServerUrl; } }
+
 
 
 #if false

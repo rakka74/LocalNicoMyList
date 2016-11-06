@@ -44,6 +44,7 @@ namespace LocalNicoMyList.nicoApi
             }
         }
 
+#if false
         // 最新コメントの日時を取得
         public async Task<DateTime?> getLatestCommentTimeAsync(string videoId, string cookieHeader/*CookieContainer cookieContainer*/)
         {
@@ -84,6 +85,7 @@ namespace LocalNicoMyList.nicoApi
 
             return null;
         }
+#endif
 
         public async Task<NameValueCollection> getflvAsync(string videoId, string cookieHeader)
         {
@@ -96,6 +98,21 @@ namespace LocalNicoMyList.nicoApi
             string url = string.Format("http://flapi.nicovideo.jp/api/getflv/{0}", videoId);
             string ret = await hc.GetStringAsync(url);
             return this.parseQueryString(ret);
+        }
+
+        public async Task<DateTime?> getLatestCommentTimeAsync(string threadId, string messageServerUrl)
+        {
+            var hc = new HttpClient();
+            var url = string.Format("{0}thread?version=20090904&thread={1}&res_from=-1", messageServerUrl, threadId);
+            var ret = await hc.GetStringAsync(url);
+
+            XmlDocument xdoc = new XmlDocument();
+            xdoc.LoadXml(ret);
+            XmlElement root = xdoc.DocumentElement;
+            XmlNode chat = root?.SelectSingleNode("chat");
+            if (null == chat)   // コメントが存在しない場合
+                return DateTimeExt.fromUnixTime(0);
+            return DateTimeExt.fromUnixTime(long.Parse(chat.Attributes["date"].Value));
         }
 
 

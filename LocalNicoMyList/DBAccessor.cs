@@ -125,7 +125,7 @@ namespace LocalNicoMyList
             {
                 while (reader.Read())
                 {
-                    ret.Add(new MyListItemRecord()
+                    var item = new MyListItemRecord()
                     {
                         videoId = reader["videoId"].ToString(),
                         createTime = DateTimeExt.fromUnixTime((long)((double)reader["createTime"])),
@@ -138,10 +138,13 @@ namespace LocalNicoMyList
                         mylistCounter = (int)((long)reader["mylistCounter"]),
                         threadId = reader["thread_id"].ToString(),
                         messageServerUrl = reader["ms"].ToString(),
-                    });
+                    };
                     var latestCommentTime = reader["latestCommentTime"];
                     if (!(latestCommentTime is System.DBNull))
-                        latestCommentTime = DateTimeExt.fromUnixTime((long)((double)reader["latestCommentTime"]));
+                    {
+                        item.latestCommentTime = DateTimeExt.fromUnixTime((long)((double)reader["latestCommentTime"]));
+                    }
+                    ret.Add(item);
                 }
             }
             return ret;
