@@ -453,7 +453,7 @@ namespace LocalNicoMyList
                             if (null != threadId && null != messageServerUrl)
                             {
                                 _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
-                                _myListItemSource.First((_) => { return _.videoId.Equals(videoId); }).setGetflv(threadId, messageServerUrl);
+                                _myListItemSource.First((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
 
                                 break;
                             }
@@ -480,6 +480,10 @@ namespace LocalNicoMyList
             }
             catch(TaskCanceledException e)
             {
+            }
+            catch(Exception e2)
+            {
+                Console.WriteLine(e2);
             }
         }
 
