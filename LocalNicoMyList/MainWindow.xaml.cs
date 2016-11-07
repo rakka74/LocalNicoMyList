@@ -681,9 +681,37 @@ namespace LocalNicoMyList
                 startEditFolderListItem(folderItem);
             }));
         }
+
         private void removeFolder(FolderItem folderItem)
         {
+            if (_folderListItemSource.Count == 1)
+                return;
+
+            var dialog = new TaskDialog();
+            dialog.Caption = "LocalNicoMyList";
+            dialog.InstructionText = "フォルダ削除";
+            dialog.Text = string.Format("\"{0}\" を削除しますか？", folderItem.name);
+            dialog.Icon = TaskDialogStandardIcon.Warning;
+            dialog.StandardButtons = TaskDialogStandardButtons.Yes | TaskDialogStandardButtons.No;
+            var result = dialog.Show();
+            if (TaskDialogResult.Yes == result)
+            {
+                // 削除する前に別のフォルダを選択
+                int index = _folderListItemSource.IndexOf(folderItem);
+                if (index + 1 < _folderListItemSource.Count)
+                    ++index;
+                else
+                    --index;
+                _folderListView.SelectedIndex = index;
+
+                // 削除
+                long folderId = folderItem.id;
+                _dbAccessor.deleteMyListItems(folderId);
+                _dbAccessor.deleteFolder(folderId);
+                _folderListItemSource.Remove(folderItem);
+            }
         }
+
         private void renameFolder(FolderItem folderItem)
         {
             startEditFolderListItem(folderItem);

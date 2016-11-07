@@ -73,6 +73,13 @@ namespace LocalNicoMyList
             return (long)command.ExecuteScalar();
         }
 
+        public void deleteFolder(long folderId)
+        {
+            SQLiteCommand command = _conn.CreateCommand();
+            command.CommandText = string.Format("DELETE FROM folder WHERE id = {0}", folderId);
+            command.ExecuteNonQuery();
+        }
+
         public class FolderRecord
         {
             public long id;
@@ -260,6 +267,13 @@ namespace LocalNicoMyList
                 }
                 trans.Commit();
             }
+        }
+
+        public void deleteMyListItems(long folderId)
+        {
+            SQLiteCommand command = _conn.CreateCommand();
+            command.CommandText = string.Format("DELETE FROM myListItem WHERE folderId = {0}", folderId);
+            command.ExecuteNonQuery();
         }
 
         public bool isExistMyListItem(string videoId, long folderId)
