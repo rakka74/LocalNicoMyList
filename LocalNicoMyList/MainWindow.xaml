@@ -70,7 +70,8 @@
                       ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
                 <Button Grid.Column="2" Margin="0,5,10,5" Padding="20,0" Click="refreshButton_Click">更新</Button>
             </Grid>
-            <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop" MouseDoubleClick="_videoListView_MouseDoubleClick"></ListView>
+            <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
+                      VirtualizingPanel.ScrollUnit="Pixel" MouseDoubleClick="_videoListView_MouseDoubleClick"></ListView>
         </Grid>
     </Grid>
 </Window>
