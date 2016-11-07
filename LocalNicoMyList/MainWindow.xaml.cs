@@ -654,6 +654,32 @@ namespace LocalNicoMyList
 
         private void addFolder()
         {
+            string baseName = "新しいフォルダー";
+            string name;
+            int num = 1;
+            while (true)
+            {
+                name = (1 == num) ? baseName : string.Format("{0} ({1})", baseName, num);
+                if (null == _folderListItemSource.FirstOrDefault((_) => { return _.name.Equals(name); }))
+                    break;
+                ++num;
+            }
+
+            long folderId = _dbAccessor.addFolder(name);
+            FolderItem folderItem = new FolderItem(folderId, name);
+            _folderListItemSource.Add(folderItem);
+
+            int index = _folderListItemSource.IndexOf(folderItem);
+            this.Dispatcher.BeginInvoke((Action)(async () =>
+            {
+                while(true)
+                {
+                    var viewItem = _folderListView.ItemContainerGenerator.ContainerFromIndex(index) as ListViewItem;
+                    if (null != viewItem) break;
+                    await Task.Delay(100);
+                }
+                startEditFolderListItem(folderItem);
+            }));
         }
         private void removeFolder(FolderItem folderItem)
         {
@@ -698,11 +724,13 @@ namespace LocalNicoMyList
                 _editingFolderItem.name = newName;
                 _dbAccessor.updateFolderName(_editingFolderItem.id, newName);
             }
+
+            var textBox = _folderListTextBox;
+
             _editingFolderItem = null;
             _folderListTextBox = null;
 
-            var textBox = _folderListTextBox;
-            _folderListTextBox.Visibility = Visibility.Collapsed;
+            textBox.Visibility = Visibility.Collapsed;
         }
 
         private childItem FindVisualChild<childItem>(DependencyObject obj)
