@@ -720,7 +720,8 @@ namespace LocalNicoMyList
             if (!cancel)
             {
                 var newName = _folderListTextBox.Text;
-                // todo: 名前のチェック
+                // 前後の空白を削除
+                newName = newName.Trim();
                 _editingFolderItem.name = newName;
                 _dbAccessor.updateFolderName(_editingFolderItem.id, newName);
             }
