@@ -55,6 +55,7 @@ namespace LocalNicoMyList
             _conn.Close();
         }
 
+        #region folder
         public long addFolder(string name)
         {
             SQLiteCommand command;
@@ -97,6 +98,34 @@ namespace LocalNicoMyList
             }
             return ret;
         }
+
+        public void updateFolderName(long folderId, string name)
+        {
+            using (SQLiteTransaction trans = _conn.BeginTransaction())
+            {
+                SQLiteCommand command = _conn.CreateCommand();
+                command.CommandText = string.Format("UPDATE folder SET name = '{0}' WHERE id = {1}",
+                        name,
+                        folderId);
+                command.ExecuteNonQuery();
+                trans.Commit();
+            }
+        }
+
+        public void updateCount(long folderId, int count)
+        {
+            using (SQLiteTransaction trans = _conn.BeginTransaction())
+            {
+                SQLiteCommand command = _conn.CreateCommand();
+                command.CommandText = string.Format("UPDATE folder SET count = {0} WHERE id = {1}",
+                        count,
+                        folderId);
+                command.ExecuteNonQuery();
+                trans.Commit();
+            }
+        }
+
+        #endregion
 
         #region myListItem
         public class MyListItemRecord
@@ -242,19 +271,6 @@ namespace LocalNicoMyList
         }
 
         #endregion
-
-        public void updateCount(long folderId, int count)
-        {
-            using (SQLiteTransaction trans = _conn.BeginTransaction())
-            {
-                SQLiteCommand command = _conn.CreateCommand();
-                command.CommandText = string.Format("UPDATE folder SET count = {0} WHERE id = {1}",
-                        count,
-                        folderId);
-                command.ExecuteNonQuery();
-                trans.Commit();
-            }
-        }
 
         #region getflv
 

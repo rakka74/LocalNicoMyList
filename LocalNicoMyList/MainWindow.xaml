@@ -8,16 +8,19 @@
         Title="MainWindow" Height="600" Width="900" Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
         <DataTemplate x:Key="FolderListDataTemplate">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding name}" FontSize="16" />
-                <TextBlock FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="[{0}]">
-                            <Binding Path="count" />
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-            </StackPanel>
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding name}" FontSize="16" />
+                    <TextBlock FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="[{0}]">
+                                <Binding Path="count" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+                <TextBox x:Name="textBox" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="VideoListDataTemplate">
             <StackPanel Orientation="Horizontal" Margin="0,5">
@@ -53,7 +56,15 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single" />
+        <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single" >
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="追加" Click="addFolder_Click" />
+                    <MenuItem Header="削除" Click="removeFolder_Click" />
+                    <MenuItem Header="名前の変更" Click="renameFolder_Click" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
         <GridSplitter VerticalAlignment="Stretch" Width="5"/>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>

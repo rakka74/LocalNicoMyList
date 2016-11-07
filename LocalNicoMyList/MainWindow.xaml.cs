@@ -18,6 +18,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using static LocalNicoMyList.DBAccessor;
 using static LocalNicoMyList.nicoApi.NicoApi;
 
@@ -634,6 +635,109 @@ namespace LocalNicoMyList
         {
             var myListItem = _videoListView.SelectedItem as MyListItem;
             Process.Start(string.Format("http://www.nicovideo.jp/watch/{0}", myListItem.videoId));
+        }
+
+        private void addFolder_Click(object sender, RoutedEventArgs e)
+        {
+            this.addFolder();
+        }
+
+        private void removeFolder_Click(object sender, RoutedEventArgs e)
+        {
+            this.removeFolder(_selectedFolderItem);
+        }
+
+        private void renameFolder_Click(object sender, RoutedEventArgs e)
+        {
+            this.renameFolder(_selectedFolderItem);
+        }
+
+        private void addFolder()
+        {
+        }
+        private void removeFolder(FolderItem folderItem)
+        {
+        }
+        private void renameFolder(FolderItem folderItem)
+        {
+            startEditFolderListItem(folderItem);
+        }
+
+        FolderItem _editingFolderItem;
+        TextBox _folderListTextBox;
+
+        private void startEditFolderListItem(FolderItem folderItem)
+        {
+            int index = _folderListItemSource.IndexOf(folderItem);
+            var viewItem = _folderListView.ItemContainerGenerator.ContainerFromIndex(index) as ListViewItem;
+
+            // get template
+            ContentPresenter myContentPresenter = FindVisualChild<ContentPresenter>(viewItem);
+            DataTemplate template = myContentPresenter.ContentTemplate;
+
+            // get controls in template
+            var textBox = (template.FindName("textBox", myContentPresenter) as TextBox);
+            textBox.Text = folderItem.name;
+            textBox.SelectAll();
+            textBox.Visibility = Visibility.Visible;
+            textBox.Focus();
+
+            _editingFolderItem = folderItem;
+            _folderListTextBox = textBox;
+        }
+
+        private void endEditFolderListItem(bool cancel = false)
+        {
+            if (null == _editingFolderItem)
+                return;
+
+            if (!cancel)
+            {
+                var newName = _folderListTextBox.Text;
+                // todo: 名前のチェック
+                _editingFolderItem.name = newName;
+                _dbAccessor.updateFolderName(_editingFolderItem.id, newName);
+            }
+            _editingFolderItem = null;
+            _folderListTextBox = null;
+
+            var textBox = _folderListTextBox;
+            _folderListTextBox.Visibility = Visibility.Collapsed;
+        }
+
+        private childItem FindVisualChild<childItem>(DependencyObject obj)
+                 where childItem : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child != null && child is childItem)
+                    return (childItem)child;
+                else
+                {
+                    childItem childOfChild = FindVisualChild<childItem>(child);
+                    if (childOfChild != null)
+                        return childOfChild;
+                }
+            }
+            return null;
+        }
+
+        private void folderListTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            this.endEditFolderListItem();
+        }
+
+        private void folderListTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                this.endEditFolderListItem();
+            }
+            else if (e.Key == Key.Escape)
+            {
+                this.endEditFolderListItem(true);
+            }
         }
     }
 
