@@ -37,6 +37,18 @@ namespace LocalNicoMyList
             }
         }
 
+        private bool _showedContextMenu;
+        public bool showedContextMenu
+        {
+            get { return _showedContextMenu; }
+            set
+            {
+                _showedContextMenu = value;
+                // Call OnPropertyChanged whenever the property is updated
+                OnPropertyChanged("showedContextMenu");
+            }
+        }
+
         // Create the OnPropertyChanged method to raise the event
         protected void OnPropertyChanged(string name)
         {

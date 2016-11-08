@@ -642,14 +642,25 @@ namespace LocalNicoMyList
             this.addFolder();
         }
 
+        private FolderItem getAnchorFolderItem(ContextMenu menu)
+        {
+            ListViewItem listViewItem = menu.PlacementTarget as ListViewItem;
+            FolderItem folderItem = listViewItem?.Content as FolderItem;
+            return folderItem;
+        }
+
         private void removeFolder_Click(object sender, RoutedEventArgs e)
         {
-            this.removeFolder(_selectedFolderItem);
+            var menuItem = sender as MenuItem;
+            var menu = menuItem.Parent as ContextMenu;
+            this.removeFolder(this.getAnchorFolderItem(menu));
         }
 
         private void renameFolder_Click(object sender, RoutedEventArgs e)
         {
-            this.renameFolder(_selectedFolderItem);
+            var menuItem = sender as MenuItem;
+            var menu = menuItem.Parent as ContextMenu;
+            this.renameFolder(this.getAnchorFolderItem(menu));
         }
 
         private void addFolder()
@@ -696,13 +707,16 @@ namespace LocalNicoMyList
             var result = dialog.Show();
             if (TaskDialogResult.Yes == result)
             {
-                // 削除する前に別のフォルダを選択
-                int index = _folderListItemSource.IndexOf(folderItem);
-                if (index + 1 < _folderListItemSource.Count)
-                    ++index;
-                else
-                    --index;
-                _folderListView.SelectedIndex = index;
+                // 現在選択されているフォルダが削除される場合、別のフォルダを選択
+                if (Object.ReferenceEquals(folderItem, _selectedFolderItem))
+                {
+                    int index = _folderListItemSource.IndexOf(folderItem);
+                    if (index + 1 < _folderListItemSource.Count)
+                        ++index;
+                    else
+                        --index;
+                    _folderListView.SelectedIndex = index;
+                }
 
                 // 削除
                 long folderId = folderItem.id;
@@ -795,6 +809,33 @@ namespace LocalNicoMyList
             {
                 this.endEditFolderListItem(true);
             }
+        }
+
+        FolderItem _cotextMenuFolderItem;
+
+        private void ListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _folderListView.Focus();
+            e.Handled = true;
+        }
+
+        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (null != _cotextMenuFolderItem)
+                _cotextMenuFolderItem.showedContextMenu = false;
+
+            ContextMenu menu = sender as ContextMenu;
+            var folderItem = this.getAnchorFolderItem(menu);
+            folderItem.showedContextMenu = true;
+            _cotextMenuFolderItem = folderItem;
+        }
+
+        private void ContextMenu_Closed(object sender, RoutedEventArgs e)
+        {
+            ContextMenu menu = sender as ContextMenu;
+            var folderItem = this.getAnchorFolderItem(menu);
+            folderItem.showedContextMenu = false;
+            _cotextMenuFolderItem = null;
         }
     }
 

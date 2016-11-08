@@ -44,6 +44,15 @@
                 </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=DataContext.showedContextMenu, RelativeSource={RelativeSource Self}}" Value="True" />
+                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="False"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="AliceBlue"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderBrush" Value="AliceBlue"/>
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True"/>
                         <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=ListView}}" Value="False"/>
                     </MultiDataTrigger.Conditions>
@@ -54,7 +63,7 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True"/>
-                        <Condition Binding="{Binding ContextMenu.IsOpen, RelativeSource={RelativeSource AncestorType=ListView}}" Value="True"/>
+                        <Condition Binding="{Binding ContextMenu.IsOpen, RelativeSource={RelativeSource Self}}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="DodgerBlue"/>
                     <Setter Property="Foreground" Value="White"/>
@@ -111,14 +120,20 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single" >
-            <ListView.ContextMenu>
-                <ContextMenu>
+        <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single">
+            <ListView.Resources>
+                <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
                     <MenuItem Header="追加" Click="addFolder_Click" />
                     <MenuItem Header="削除" Click="removeFolder_Click" />
                     <MenuItem Header="名前の変更" Click="renameFolder_Click" />
                 </ContextMenu>
-            </ListView.ContextMenu>
+            </ListView.Resources>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListViewItem_PreviewMouseRightButtonDown" />
+                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
+                </Style>
+            </ListView.ItemContainerStyle>
         </ListView>
         <GridSplitter VerticalAlignment="Stretch" Width="5"/>
         <Grid Grid.Column="1">
