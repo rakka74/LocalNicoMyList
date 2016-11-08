@@ -18,6 +18,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using static LocalNicoMyList.DBAccessor;
 using static LocalNicoMyList.nicoApi.NicoApi;
@@ -223,6 +224,7 @@ namespace LocalNicoMyList
                     "適当なブラウザでニコニコ動画にログインした後、再試行ボタンを押してください。";
                 dialog.Icon = TaskDialogStandardIcon.Information;
                 dialog.StandardButtons = TaskDialogStandardButtons.Retry | TaskDialogStandardButtons.Cancel;
+                dialog.OwnerWindowHandle = new WindowInteropHelper(this).Handle;
                 var result = dialog.Show();
                 if (TaskDialogResult.Cancel == result)
                 {
@@ -706,6 +708,7 @@ namespace LocalNicoMyList
             dialog.Text = string.Format("\"{0}\" を削除しますか？", folderItem.name);
             dialog.Icon = TaskDialogStandardIcon.Warning;
             dialog.StandardButtons = TaskDialogStandardButtons.Yes | TaskDialogStandardButtons.No;
+            dialog.OwnerWindowHandle = new WindowInteropHelper(this).Handle; 
             var result = dialog.Show();
 
             folderItem.isContextMenuCommandTarget = false;
