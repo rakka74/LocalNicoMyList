@@ -95,7 +95,7 @@
                         </TextBlock.Text>
                     </TextBlock>
                 </StackPanel>
-                <TextBox x:Name="textBox" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
+                <TextBox x:Name="textBox" FontSize="16" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="VideoListDataTemplate">
