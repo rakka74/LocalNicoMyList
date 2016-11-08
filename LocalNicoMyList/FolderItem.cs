@@ -49,6 +49,18 @@ namespace LocalNicoMyList
             }
         }
 
+        private bool _isContextMenuCommandTarget;
+        public bool isContextMenuCommandTarget
+        {
+            get { return _isContextMenuCommandTarget; }
+            set
+            {
+                _isContextMenuCommandTarget = value;
+                // Call OnPropertyChanged whenever the property is updated
+                OnPropertyChanged("isContextMenuCommandTarget");
+            }
+        }
+
         // Create the OnPropertyChanged method to raise the event
         protected void OnPropertyChanged(string name)
         {

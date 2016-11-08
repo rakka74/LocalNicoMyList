@@ -698,6 +698,8 @@ namespace LocalNicoMyList
             if (_folderListItemSource.Count == 1)
                 return;
 
+            folderItem.isContextMenuCommandTarget = true;
+
             var dialog = new TaskDialog();
             dialog.Caption = "LocalNicoMyList";
             dialog.InstructionText = "フォルダ削除";
@@ -705,6 +707,9 @@ namespace LocalNicoMyList
             dialog.Icon = TaskDialogStandardIcon.Warning;
             dialog.StandardButtons = TaskDialogStandardButtons.Yes | TaskDialogStandardButtons.No;
             var result = dialog.Show();
+
+            folderItem.isContextMenuCommandTarget = false;
+
             if (TaskDialogResult.Yes == result)
             {
                 // 現在選択されているフォルダが削除される場合、別のフォルダを選択
