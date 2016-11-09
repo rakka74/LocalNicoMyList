@@ -9,7 +9,7 @@ using static LocalNicoMyList.DBAccessor;
 
 namespace LocalNicoMyList
 {
-    class MyListItem : INotifyPropertyChanged
+    class MyListItem : ViewModelBase
     {
         public string videoId { get; set; }
         private string _title;
@@ -23,19 +23,6 @@ namespace LocalNicoMyList
         private DateTime? _latestCommentTime; // 最新コメント日時
         private string _threadId;
         private string _messageServerUrl;
-
-        // Declare the event
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        // Create the OnPropertyChanged method to raise the event
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(name));
-            }
-        }
 
         public string title
         {

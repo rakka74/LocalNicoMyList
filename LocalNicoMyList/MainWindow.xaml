@@ -148,51 +148,60 @@
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
-    <Grid x:Name="_Grid1">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" x:Name="_Grid1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single">
-            <ListView.Resources>
-                <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
-                    <MenuItem Header="追加" Click="addFolder_Click" />
-                    <MenuItem Header="削除" Click="removeFolder_Click" />
-                    <MenuItem Header="名前の変更" Click="renameFolder_Click" />
-                </ContextMenu>
-            </ListView.Resources>
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListViewItem_PreviewMouseRightButtonDown" />
-                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
-        <GridSplitter VerticalAlignment="Stretch" Width="5"/>
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="auto" />
-                </Grid.ColumnDefinitions>
-                <ComboBox x:Name="sortCB" Grid.Column="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5"
-                      ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
-                <Button Grid.Column="2" Margin="0,5,10,5" Padding="20,0" Click="refreshButton_Click">更新</Button>
-            </Grid>
-            <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
-                      VirtualizingPanel.ScrollUnit="Pixel">
+            <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single">
+                <ListView.Resources>
+                    <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
+                        <MenuItem Header="追加" Click="addFolder_Click" />
+                        <MenuItem Header="削除" Click="removeFolder_Click" />
+                        <MenuItem Header="名前の変更" Click="renameFolder_Click" />
+                    </ContextMenu>
+                </ListView.Resources>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-                        <EventSetter Event="MouseDoubleClick" Handler="MyListListViewItem_MouseDoubleClick" />
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListViewItem_PreviewMouseRightButtonDown" />
+                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
                     </Style>
                 </ListView.ItemContainerStyle>
             </ListView>
+            <GridSplitter VerticalAlignment="Stretch" Width="5"/>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="sortCB" Grid.Column="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5"
+                          ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
+                    <Button Grid.Column="2" Margin="0,5,10,5" Padding="20,0" Click="refreshButton_Click">更新</Button>
+                </Grid>
+                <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
+                          VirtualizingPanel.ScrollUnit="Pixel">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                            <EventSetter Event="MouseDoubleClick" Handler="MyListListViewItem_MouseDoubleClick" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+            </Grid>
         </Grid>
+        <StatusBar Grid.Row="1">
+            <TextBlock Text="{Binding getflvText}" />
+        </StatusBar>
     </Grid>
 </Window>

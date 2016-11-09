@@ -104,6 +104,21 @@ namespace LocalNicoMyList
         CancellationTokenSource _getflvCTS;
         ConcurrentQueue<string> _getflvQueue;
 
+        ViewModel _viewModel;
+
+        class ViewModel : ViewModelBase
+        {
+            private string _getflvText;
+            public string getflvText {
+                get { return _getflvText; }
+                set
+                {
+                    _getflvText = value;
+                    OnPropertyChanged("getflvText");
+                }
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -165,6 +180,9 @@ namespace LocalNicoMyList
             this.sortCB.DataContext = _sortCBItems;
 
             this.sortCB.SelectedValue = SortKind.ViewCountDescend; // とりあえず再生数の多い順で表示
+
+            _viewModel = new ViewModel();
+            this.DataContext = _viewModel;
 
         }
 
@@ -446,6 +464,7 @@ namespace LocalNicoMyList
                     string videoId;
                     if (null != _cookieHeader && _getflvQueue.TryDequeue(out videoId))
                     {
+                        _viewModel.getflvText = string.Format("getflv: {1} | 残り{0}", _getflvQueue.Count, videoId);
                         int waitTime = 1000 * 30;
                         while (!_getflvCTS.IsCancellationRequested)
                         {
@@ -476,6 +495,10 @@ namespace LocalNicoMyList
                                 waitTime += 1000;
                             }
                         }
+                    }
+                    else
+                    {
+                        _viewModel.getflvText = "";
                     }
                     await Task.Delay(1000, _getflvCTS.Token);
                 }

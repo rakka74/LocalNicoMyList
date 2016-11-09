@@ -8,11 +8,8 @@ using static LocalNicoMyList.DBAccessor;
 
 namespace LocalNicoMyList
 {
-    class FolderItem : INotifyPropertyChanged
+    class FolderItem : ViewModelBase
     {
-        // Declare the event
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public long id;
 
         private string _name;
@@ -58,16 +55,6 @@ namespace LocalNicoMyList
                 _isContextMenuCommandTarget = value;
                 // Call OnPropertyChanged whenever the property is updated
                 OnPropertyChanged("isContextMenuCommandTarget");
-            }
-        }
-
-        // Create the OnPropertyChanged method to raise the event
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(name));
             }
         }
 
