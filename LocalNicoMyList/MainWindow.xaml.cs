@@ -781,6 +781,8 @@ namespace LocalNicoMyList
             _editingFolderItem = null;
             _folderListTextBox = null;
 
+            _folderListView.Focus();
+
             textBox.Visibility = Visibility.Collapsed;
         }
 
@@ -817,6 +819,7 @@ namespace LocalNicoMyList
             {
                 this.endEditFolderListItem(true);
             }
+            e.Handled = true;
         }
 
         FolderItem _cotextMenuFolderItem;
