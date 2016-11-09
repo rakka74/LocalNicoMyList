@@ -633,10 +633,14 @@ namespace LocalNicoMyList
             _myListItemCVS.SortDescriptions.Add(sortDescription);
         }
 
-        private void _videoListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void MyListListViewItem_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            var myListItem = _videoListView.SelectedItem as MyListItem;
-            Process.Start(string.Format("http://www.nicovideo.jp/watch/{0}", myListItem.videoId));
+            ListViewItem lvi = sender as ListViewItem;
+            MyListItem myListItem = lvi?.DataContext as MyListItem;
+            if (null != myListItem)
+            {
+                Process.Start(string.Format("http://www.nicovideo.jp/watch/{0}", myListItem.videoId));
+            }
         }
 
         private void addFolder_Click(object sender, RoutedEventArgs e)
