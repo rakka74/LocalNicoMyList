@@ -464,7 +464,7 @@ namespace LocalNicoMyList
                     string videoId;
                     if (null != _cookieHeader && _getflvQueue.TryDequeue(out videoId))
                     {
-                        _viewModel.getflvText = string.Format("getflv: {1} | 残り{0}", _getflvQueue.Count, videoId);
+                        _viewModel.getflvText = string.Format("getflv: {1} | 残り{0}", _getflvQueue.Count + 1, videoId);
                         int waitTime = 1000 * 30;
                         while (!_getflvCTS.IsCancellationRequested)
                         {
