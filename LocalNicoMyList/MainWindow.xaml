@@ -175,7 +175,7 @@
                     </Style>
                 </ListView.ItemContainerStyle>
             </ListView>
-            <GridSplitter Grid.Column="1" VerticalAlignment="Stretch" Width="5"/>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
