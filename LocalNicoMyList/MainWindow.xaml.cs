@@ -194,6 +194,7 @@ namespace LocalNicoMyList
             var lvDDMan = new ListViewDragDropManager<FolderItem>(_folderListView);
             lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
 
+            _folderListView.Focus();
             _folderListView.SelectedIndex = 0;
 
             this.prepareCookie();
