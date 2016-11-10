@@ -20,6 +20,7 @@ namespace LocalNicoMyList
             command.CommandText = "CREATE TABLE IF NOT EXISTS folder (" +
                 "id INTEGER  PRIMARY KEY, " +
                 "name TEXT, " +
+                "orderIdx INTEGER, " +
                 "count INTEGER NOT NULL" +
             ")";
             command.ExecuteNonQuery();
@@ -56,14 +57,14 @@ namespace LocalNicoMyList
         }
 
         #region folder
-        public long addFolder(string name)
+        public long addFolder(string name, int orderIdx)
         {
             SQLiteCommand command;
             using (SQLiteTransaction trans = _conn.BeginTransaction())
             {
                 command = _conn.CreateCommand();
-                command.CommandText = string.Format("INSERT INTO folder (name, count) VALUES ('{0}', {1})", 
-                    name, 0);
+                command.CommandText = string.Format("INSERT INTO folder (name, orderIdx, count) VALUES ('{0}', {1}, {2})", 
+                    name, orderIdx, 0);
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -87,11 +88,12 @@ namespace LocalNicoMyList
             public int count;
         }
 
+        // orderIdxの順序で取得
         public List<FolderRecord> getFolder()
         {
             List<FolderRecord> ret = new List<FolderRecord>();
             SQLiteCommand cmd = _conn.CreateCommand();
-            cmd.CommandText = "SELECT * FROM folder";
+            cmd.CommandText = "SELECT * FROM folder ORDER BY orderIdx";
             using (SQLiteDataReader reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
@@ -115,6 +117,22 @@ namespace LocalNicoMyList
                         name,
                         folderId);
                 command.ExecuteNonQuery();
+                trans.Commit();
+            }
+        }
+
+        public void updateFolderOrderIdx(IEnumerable<FolderItem> items)
+        {
+            using (SQLiteTransaction trans = _conn.BeginTransaction())
+            {
+                for (int ni = 0; ni < items.Count(); ++ni)
+                {
+                    SQLiteCommand command = _conn.CreateCommand();
+                    command.CommandText = string.Format("UPDATE folder SET orderIdx = {0} WHERE id = {1}",
+                            ni,
+                            items.ElementAt(ni).id);
+                    command.ExecuteNonQuery();
+                }
                 trans.Commit();
             }
         }

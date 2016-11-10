@@ -139,11 +139,12 @@ namespace LocalNicoMyList
             _nicoApi = new NicoApi();
             _dbAccessor = new DBAccessor();
 
+            // フォルダ一覧初期化
             List<FolderRecord> folderRecordList = _dbAccessor.getFolder();
             long id;
             if (0 == folderRecordList.Count)
             {
-                id = _dbAccessor.addFolder("フォルダ1");
+                id = _dbAccessor.addFolder("フォルダ1", 0);
             }
             folderRecordList = _dbAccessor.getFolder();
 
@@ -155,6 +156,7 @@ namespace LocalNicoMyList
 
             _folderListView.DataContext = _folderListItemSource;
 
+            // マイリスト一覧初期化
             _myListItemCVS = new CollectionViewSource();
             _myListItemCVS.Source = _myListItemSource;
             _videoListView.DataContext = _myListItemCVS;
@@ -189,7 +191,8 @@ namespace LocalNicoMyList
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            new ListViewDragDropManager<FolderItem>(_folderListView);
+            var lvDDMan = new ListViewDragDropManager<FolderItem>(_folderListView);
+            lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
 
             _folderListView.SelectedIndex = 0;
 
@@ -203,6 +206,13 @@ namespace LocalNicoMyList
 
             _getflvCTS = new CancellationTokenSource();
             _getflvTask = this.startGetflvTask();
+        }
+
+        private void LvDDMan_ProcessDrop(object sender, ProcessDropEventArgs<FolderItem> e)
+        {
+            _folderListItemSource.Move(e.OldIndex, e.NewIndex);
+            // DBに保存
+            _dbAccessor.updateFolderOrderIdx(_folderListItemSource);
         }
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -708,7 +718,7 @@ namespace LocalNicoMyList
                 ++num;
             }
 
-            long folderId = _dbAccessor.addFolder(name);
+            long folderId = _dbAccessor.addFolder(name, _folderListItemSource.Count);
             FolderItem folderItem = new FolderItem(folderId, name);
             _folderListItemSource.Add(folderItem);
 
