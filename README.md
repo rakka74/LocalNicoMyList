@@ -9,7 +9,8 @@
 * 更新ボタンで再生数などの情報を最新の値に更新します。
 * マイリスト登録時には最新コメント日時の取得が行われません。時間がたつとgetflvの項目が○になるので、その後、更新ボタンを押すと最新コメント日時が取得されるようになります。
 
-作成途中。
+### スクリーンショット
+![タイトル](screenshot.JPG)
 
 ### TODO
 * マイリストの削除機能
@@ -18,5 +19,8 @@
 * サムネイル画像の表示について、ImageのSourceでサムネイルURLを指定しているが、表示のタイミングでダウンロードしにいっているようで表示に時間がかかることがあるのでローカルにキャッシュするようにする。
 * TextBlockで日本語にU+0335 COMBINING SHORT STROKE OVERLAYを混ぜた文字列が文字化けするのを何とかする。WebBrowserだと文字化けしない。
 
-### スクリーンショット
-![タイトル](screenshot.JPG)
+### 使用ライブラリ
+* DynamicJson (c) neuecc
+* ListViewDragDropManager (c) Josh Smith, Anthony Perez
+* SharpHeaderCookie (c) 悠悠閑閑前途遼遠
+* SQLite (c) SQLite Development Team
