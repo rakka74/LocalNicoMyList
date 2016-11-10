@@ -20,6 +20,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using WPF.JoshSmith.ServiceProviders.UI;
 using static LocalNicoMyList.DBAccessor;
 using static LocalNicoMyList.nicoApi.NicoApi;
 
@@ -188,6 +189,8 @@ namespace LocalNicoMyList
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            new ListViewDragDropManager<FolderItem>(_folderListView);
+
             _folderListView.SelectedIndex = 0;
 
             this.prepareCookie();
