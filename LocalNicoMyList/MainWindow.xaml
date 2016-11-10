@@ -117,7 +117,7 @@
                         </TextBlock.Text>
                     </TextBlock>
                 </StackPanel>
-                <TextBox x:Name="textBox" FontSize="16" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" Margin="0,0,10,0" />
+                <TextBox x:Name="textBox" FontSize="16" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="VideoListDataTemplate">
@@ -156,6 +156,7 @@
         <Grid Grid.Row="0" x:Name="_Grid1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -174,8 +175,8 @@
                     </Style>
                 </ListView.ItemContainerStyle>
             </ListView>
-            <GridSplitter VerticalAlignment="Stretch" Width="5"/>
-            <Grid Grid.Column="1">
+            <GridSplitter Grid.Column="1" VerticalAlignment="Stretch" Width="5"/>
+            <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
