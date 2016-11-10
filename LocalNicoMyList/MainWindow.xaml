@@ -108,7 +108,7 @@
         <DataTemplate x:Key="FolderListDataTemplate">
             <Grid>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{Binding name}" FontSize="16" />
+                    <TextBlock Text="{Binding name}" FontSize="12" />
                     <TextBlock FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="[{0}]">
@@ -117,7 +117,7 @@
                         </TextBlock.Text>
                     </TextBlock>
                 </StackPanel>
-                <TextBox x:Name="textBox" FontSize="16" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
+                <TextBox x:Name="textBox" FontSize="12" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="VideoListDataTemplate">
