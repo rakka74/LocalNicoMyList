@@ -58,11 +58,11 @@ namespace LocalNicoMyList
             }
         }
 
-        public FolderItem(FolderRecord folderRecord)
+        public FolderItem(FolderRecord folderRecord, int count)
         {
             this.id = folderRecord.id;
             this.name = folderRecord.name;
-            this.count = folderRecord.count;
+            this.count = count;
         }
 
         public FolderItem(long folderId, string name)

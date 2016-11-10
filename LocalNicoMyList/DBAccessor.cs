@@ -20,8 +20,7 @@ namespace LocalNicoMyList
             command.CommandText = "CREATE TABLE IF NOT EXISTS folder (" +
                 "id INTEGER  PRIMARY KEY, " +
                 "name TEXT, " +
-                "orderIdx INTEGER, " +
-                "count INTEGER NOT NULL" +
+                "orderIdx INTEGER" +
             ")";
             command.ExecuteNonQuery();
 
@@ -63,8 +62,8 @@ namespace LocalNicoMyList
             using (SQLiteTransaction trans = _conn.BeginTransaction())
             {
                 command = _conn.CreateCommand();
-                command.CommandText = string.Format("INSERT INTO folder (name, orderIdx, count) VALUES ('{0}', {1}, {2})", 
-                    name, orderIdx, 0);
+                command.CommandText = string.Format("INSERT INTO folder (name, orderIdx) VALUES ('{0}', {1})", 
+                    name, orderIdx);
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -85,7 +84,6 @@ namespace LocalNicoMyList
         {
             public long id;
             public string name;
-            public int count;
         }
 
         // orderIdxの順序で取得
@@ -101,7 +99,6 @@ namespace LocalNicoMyList
                     ret.Add(new FolderRecord() {
                         id = Convert.ToInt32(reader["id"].ToString()),
                         name = reader["name"].ToString(),
-                        count = Convert.ToInt32(reader["count"].ToString()),
                     });
                 }
             }
@@ -133,19 +130,6 @@ namespace LocalNicoMyList
                             items.ElementAt(ni).id);
                     command.ExecuteNonQuery();
                 }
-                trans.Commit();
-            }
-        }
-
-        public void updateCount(long folderId, int count)
-        {
-            using (SQLiteTransaction trans = _conn.BeginTransaction())
-            {
-                SQLiteCommand command = _conn.CreateCommand();
-                command.CommandText = string.Format("UPDATE folder SET count = {0} WHERE id = {1}",
-                        count,
-                        folderId);
-                command.ExecuteNonQuery();
                 trans.Commit();
             }
         }
@@ -300,6 +284,14 @@ namespace LocalNicoMyList
             command = _conn.CreateCommand();
             command.CommandText = string.Format("SELECT COUNT(*) FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId, folderId);
             return 0 < Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        public int getMyListCount(long folderId)
+        {
+            SQLiteCommand command;
+            command = _conn.CreateCommand();
+            command.CommandText = string.Format("SELECT COUNT(*) FROM myListItem WHERE folderId = {0}", folderId);
+            return Convert.ToInt32(command.ExecuteScalar());
         }
 
         #endregion

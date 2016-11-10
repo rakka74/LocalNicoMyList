@@ -151,7 +151,8 @@ namespace LocalNicoMyList
             _folderListItemSource = new ObservableCollection<FolderItem>();
             foreach (FolderRecord folderRecord in folderRecordList)
             {
-                _folderListItemSource.Add(new FolderItem(folderRecord));
+                int count = _dbAccessor.getMyListCount(folderRecord.id);
+                _folderListItemSource.Add(new FolderItem(folderRecord, count));
             }
 
             _folderListView.DataContext = _folderListItemSource;
@@ -313,7 +314,6 @@ namespace LocalNicoMyList
                             _getflvQueue.Enqueue(videoId);
                         }
                         _selectedFolderItem.count = _myListItemSource.Count;
-                        _dbAccessor.updateCount(_selectedFolderItem.id, _myListItemSource.Count);
                     }
                 }
             }
@@ -399,8 +399,6 @@ namespace LocalNicoMyList
                 _myListItemCVS.Source = _myListItemSource;
 
                 _selectedFolderItem.count = list.Count;
-                _dbAccessor.updateCount(_selectedFolderItem.id, list.Count);
-
             }
             catch (Exception e)
             {
