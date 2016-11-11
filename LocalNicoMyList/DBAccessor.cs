@@ -361,6 +361,30 @@ namespace LocalNicoMyList
             }
             return ret;
         }
+
+        public GetflvInfoRecord getGetflvInfo(string videoId)
+        {
+            GetflvInfoRecord ret = null;
+
+            SQLiteCommand command;
+            command = _conn.CreateCommand();
+            command.CommandText = string.Format("SELECT * FROM getflvInfo WHERE videoId = '{0}'", videoId);
+            using (SQLiteDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ret = new GetflvInfoRecord()
+                    {
+                        videoId = reader["videoId"].ToString(),
+                        messageServerUrl = reader["ms"].ToString(),
+                        threadId = reader["thread_id"].ToString(),
+                    };
+                    break;
+                }
+            }
+            return ret;
+        }
+
         #endregion
 
     }

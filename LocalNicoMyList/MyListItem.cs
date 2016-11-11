@@ -85,6 +85,10 @@ namespace LocalNicoMyList
             // Call OnPropertyChanged whenever the property is updated
             OnPropertyChanged("getflv");
         }
+        public void setGetflv(GetflvInfoRecord getflv)
+        {
+            this.setGetflv(getflv.threadId, getflv.messageServerUrl);
+        }
 
         public string threadId { get { return _threadId; } }
         public string messageServerUrl { get { return _messageServerUrl; } }

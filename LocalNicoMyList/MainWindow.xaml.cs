@@ -300,7 +300,7 @@ namespace LocalNicoMyList
             {
                 string videoId = match.Groups[1].Value;
                 ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                DateTime? latestCommentTime = null;// await this.getLatestCommentTimeAsync(videoId);
+                DateTime? latestCommentTime = null;
                 var item = MyListItem.from(res, latestCommentTime, DateTime.Now);
                 if (null != item)
                 {
@@ -308,10 +308,15 @@ namespace LocalNicoMyList
                     {
                         _myListItemSource.Add(item);
                         _dbAccessor.addMyListItem(item, _selectedFolderItem.id);
-                        if (!_dbAccessor.isExistGetflvInfo(videoId))
+                        GetflvInfoRecord getflvInfo = _dbAccessor.getGetflvInfo(videoId);
+                        if (null == getflvInfo)
                         {
                             _dbAccessor.addEmptyGetflvInfo(videoId);
                             _getflvQueue.Enqueue(videoId);
+                        }
+                        else
+                        {
+                            item.setGetflv(getflvInfo);
                         }
                         _selectedFolderItem.count = _myListItemSource.Count;
                     }
@@ -371,7 +376,7 @@ namespace LocalNicoMyList
                     var videoId = item["item_data"]["video_id"];
                     var createTime = (long)item["create_time"];
                     ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                    DateTime? latestCommentTime = null;// await this.getLatestCommentTimeAsync(videoId);
+                    DateTime? latestCommentTime = null;
                     var myListItem = MyListItem.from(res, latestCommentTime, DateTimeExt.fromUnixTime(createTime));
                     if (null != myListItem)
                     {
@@ -386,10 +391,15 @@ namespace LocalNicoMyList
                 _dbAccessor.addMyListItems(myListItems, _selectedFolderItem.id);
                 foreach (var item in myListItems)
                 {
-                    if (!_dbAccessor.isExistGetflvInfo(item.videoId))
+                    var getflvInfo = _dbAccessor.getGetflvInfo(item.videoId);
+                    if (null == getflvInfo)
                     {
                         _dbAccessor.addEmptyGetflvInfo(item.videoId);
                         _getflvQueue.Enqueue(item.videoId);
+                    }
+                    else
+                    {
+                        item.setGetflv(getflvInfo);
                     }
                 }
                 // ビューモデルに追加
