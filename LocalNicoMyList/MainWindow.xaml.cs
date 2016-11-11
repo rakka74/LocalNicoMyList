@@ -466,6 +466,9 @@ namespace LocalNicoMyList
 
                 // DBを更新
                 _dbAccessor.updateMyListItems(_myListItemSource, _selectedFolderItem.id);
+
+                _myListItemCVS.IsLiveSortingRequested = true;
+                _myListItemCVS.IsLiveSortingRequested = false;
             }
             catch (Exception e)
             {
