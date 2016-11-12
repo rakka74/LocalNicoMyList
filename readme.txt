@@ -2,7 +2,7 @@ LocalNicoMyList 1.0 (c) 2016 rakka
 https://github.com/rakka74/LocalNicoMyList
 
 ■ 概要
-ニコニコ動画のマイリストをローカルで管理するアプリケーション。
+ニコニコ動画のマイリスト機能をローカルで行うアプリケーション。
 
 ■ 動作確認環境
 Windows 7 Home Premium SP1
@@ -34,3 +34,5 @@ Microsoft Visual Studio Community 2015
 ・SharpHeaderCookie (c) 悠悠閑閑前途遼遠
 ・SQLite (c) SQLite Development Team
 
+■ 履歴
+https://github.com/rakka74/LocalNicoMyList/releases
