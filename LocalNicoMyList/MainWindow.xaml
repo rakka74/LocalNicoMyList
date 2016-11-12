@@ -161,7 +161,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- 左ペイン：フォルダ一覧 -->
-            <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single">
+            <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single" MouseLeftButtonDown="folderListView_MouseLeftButtonDown">
                 <ListView.Resources>
                     <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
                         <MenuItem Header="追加" Click="addFolder_Click" />
@@ -171,7 +171,7 @@
                 </ListView.Resources>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListViewItem_PreviewMouseRightButtonDown" />
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="folderListViewItem_PreviewMouseRightButtonDown" />
                         <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
                     </Style>
                 </ListView.ItemContainerStyle>
@@ -195,7 +195,7 @@
                 </Grid>
                 <!-- マイリスト一覧 -->
                 <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
-                          VirtualizingPanel.ScrollUnit="Pixel">
+                          VirtualizingPanel.ScrollUnit="Pixel" MouseLeftButtonDown="videoListView_MouseLeftButtonDown">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
                             <EventSetter Event="MouseDoubleClick" Handler="MyListListViewItem_MouseDoubleClick" />

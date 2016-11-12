@@ -877,13 +877,6 @@ namespace LocalNicoMyList
 
         FolderItem _cotextMenuFolderItem;
 
-        private void ListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            _folderListView.Focus();
-            // ハンドルすることで右クリックでアイテムが選択されなくなる
-            e.Handled = true;
-        }
-
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             if (null != _cotextMenuFolderItem)
@@ -902,6 +895,26 @@ namespace LocalNicoMyList
             folderItem.showedContextMenu = false;
             _cotextMenuFolderItem = null;
         }
+
+        private void folderListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _folderListView.Focus();
+            // ハンドルすることで右クリックでアイテムが選択されなくなる
+            e.Handled = true;
+        }
+
+        private void folderListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
+            _folderListView.Focus();
+        }
+
+        private void videoListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
+            _videoListView.Focus();
+        }
+
     }
 
     public static class EnumerableExtensions
