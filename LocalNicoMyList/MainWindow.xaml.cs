@@ -225,10 +225,12 @@ namespace LocalNicoMyList
             this.DataContext = _viewModel;
         }
 
+        ListViewDragDropManager<FolderItem> _lvDDMan;
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var lvDDMan = new ListViewDragDropManager<FolderItem>(_folderListView);
-            lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
+            _lvDDMan = new ListViewDragDropManager<FolderItem>(_folderListView);
+            _lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
 
             _folderListView.Focus();
 
@@ -885,10 +887,14 @@ namespace LocalNicoMyList
 
             _editingFolderItem = folderItem;
             _folderListTextBox = textBox;
+
+            _lvDDMan.ListView = null;
         }
 
         private void endEditFolderListItem(bool cancel = false)
         {
+            _lvDDMan.ListView = _folderListView;
+
             if (null == _editingFolderItem)
                 return;
 
@@ -944,7 +950,6 @@ namespace LocalNicoMyList
             {
                 this.endEditFolderListItem(true);
             }
-            e.Handled = true;
         }
 
         FolderItem _cotextMenuFolderItem;
