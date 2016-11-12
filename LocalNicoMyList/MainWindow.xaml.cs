@@ -185,11 +185,19 @@ namespace LocalNicoMyList
 
             this.sortCB.DataContext = _sortCBItems;
 
-            this.sortCB.SelectedValue = SortKind.ViewCountDescend; // とりあえず再生数の多い順で表示
+            SortKind sortKind;
+            try
+            {
+                sortKind = (SortKind)Enum.Parse(typeof(SortKind), Properties.Settings.Default.LastSelectedSortKind, true);
+            }
+            catch(Exception e)
+            {
+                sortKind = SortKind.CreateTimeDescend;
+            }
+            this.sortCB.SelectedValue = sortKind;
 
             _viewModel = new ViewModel();
             this.DataContext = _viewModel;
-
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -198,7 +206,14 @@ namespace LocalNicoMyList
             lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
 
             _folderListView.Focus();
-            _folderListView.SelectedIndex = 0;
+
+            // 前回終了時のフォルダを選択
+            long folderId = Properties.Settings.Default.LastSelectedFolderId;
+            var folderItem = _folderListItemSource.FirstOrDefault(_ => { return _.id == folderId; });
+            if (null != folderItem)
+                _folderListView.SelectedItem = folderItem;
+            else
+                _folderListView.SelectedIndex = 0;
 
             this.prepareCookie();
 
@@ -233,6 +248,9 @@ namespace LocalNicoMyList
             Properties.Settings.Default.MainWindow_Width = Width;
             Properties.Settings.Default.MainWindow_Height = Height;
             Properties.Settings.Default.Folder_Width = _folderListView.ActualWidth;
+            Properties.Settings.Default.LastSelectedFolderId = _selectedFolderItem.id;
+            Properties.Settings.Default.LastSelectedSortKind = Enum.GetName(typeof(SortKind), (SortKind)sortCB.SelectedValue);
+
             // ファイルに保存
             Properties.Settings.Default.Save();
         }

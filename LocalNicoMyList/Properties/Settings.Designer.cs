@@ -82,5 +82,29 @@ namespace LocalNicoMyList.Properties {
                 this["Folder_Width"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public long LastSelectedFolderId {
+            get {
+                return ((long)(this["LastSelectedFolderId"]));
+            }
+            set {
+                this["LastSelectedFolderId"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("CreateTimeDescend")]
+        public string LastSelectedSortKind {
+            get {
+                return ((string)(this["LastSelectedSortKind"]));
+            }
+            set {
+                this["LastSelectedSortKind"] = value;
+            }
+        }
     }
 }

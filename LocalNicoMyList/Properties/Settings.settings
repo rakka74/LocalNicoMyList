@@ -17,5 +17,11 @@
     <Setting Name="Folder_Width" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="LastSelectedFolderId" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="LastSelectedSortKind" Type="System.String" Scope="User">
+      <Value Profile="(Default)">CreateTimeDescend</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
