@@ -61,7 +61,7 @@ namespace LocalNicoMyList.Properties {
         }
         
         /// <summary>
-        ///   LocalNicoMyList 1.0 に類似しているローカライズされた文字列を検索します。
+        ///   LocalNicoMyList 1.01 に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string WINDOW_TITLE {
             get {
