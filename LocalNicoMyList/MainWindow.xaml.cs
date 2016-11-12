@@ -111,6 +111,13 @@ namespace LocalNicoMyList
 
         class ViewModel : ViewModelBase
         {
+            private MainWindow _outer;
+
+            public ViewModel(MainWindow outer)
+            {
+                _outer = outer;
+            }
+
             private string _getflvText;
             public string getflvText {
                 get { return _getflvText; }
@@ -119,6 +126,24 @@ namespace LocalNicoMyList
                     _getflvText = value;
                     OnPropertyChanged("getflvText");
                 }
+            }
+
+            private bool _isCheckedGetflv;
+            public bool isCheckedGetflv
+            {
+                get { return _isCheckedGetflv; }
+                set
+                {
+                    _outer.getflvEnabled = value;
+                    _isCheckedGetflv = value;
+                    OnPropertyChanged("isCheckedGetflv");
+                }
+            }
+
+            public void setIsCheckedGetflv(bool value)
+            {
+                _isCheckedGetflv = value;
+                OnPropertyChanged("isCheckedGetflv");
             }
         }
 
@@ -196,7 +221,7 @@ namespace LocalNicoMyList
             }
             this.sortCB.SelectedValue = sortKind;
 
-            _viewModel = new ViewModel();
+            _viewModel = new ViewModel(this);
             this.DataContext = _viewModel;
         }
 
@@ -215,7 +240,7 @@ namespace LocalNicoMyList
             else
                 _folderListView.SelectedIndex = 0;
 
-            this.prepareCookie();
+            this.getflvEnabled = Properties.Settings.Default.IsCheckedGetflv;
 
             _getflvQueue = new ConcurrentQueue<string>();
             foreach (var item in _dbAccessor.getEmptyGetflvInfo())
@@ -250,12 +275,13 @@ namespace LocalNicoMyList
             Properties.Settings.Default.Folder_Width = _folderListView.ActualWidth;
             Properties.Settings.Default.LastSelectedFolderId = _selectedFolderItem.id;
             Properties.Settings.Default.LastSelectedSortKind = Enum.GetName(typeof(SortKind), (SortKind)sortCB.SelectedValue);
+            Properties.Settings.Default.IsCheckedGetflv = _viewModel.isCheckedGetflv;
 
             // ファイルに保存
             Properties.Settings.Default.Save();
         }
 
-         private void prepareCookie()
+         private bool prepareCookie()
         {
             while (true) {
                 IGetBrowserCookie[] getBrowserCookies = LibHeaderCookie.Instance();
@@ -266,7 +292,9 @@ namespace LocalNicoMyList
                     {
                         _cookieHeader = getBrowserCookie.CookieHeader(uri, "user_session");
                         if (null != _cookieHeader)
-                            return;
+                        {
+                            return true;
+                        }
                     }
                 }
 
@@ -284,6 +312,7 @@ namespace LocalNicoMyList
                     break;
                 }
             }
+            return false;
         }
 
 
@@ -294,21 +323,6 @@ namespace LocalNicoMyList
             {
                 e.Effects = DragDropEffects.Copy;
             }
-        }
-
-        private async Task<DateTime?> getLatestCommentTimeAsync(string videoId)
-        {
-            DateTime? latestCommentTime = null;
-            if (null != _cookieHeader)
-            {
-                latestCommentTime = await _nicoApi.getLatestCommentTimeAsync(videoId, _cookieHeader);
-                if (!latestCommentTime.HasValue)
-                {
-                    // メッセージでも表示する？
-                    _cookieHeader = null;
-                }
-            }
-            return latestCommentTime;
         }
 
         private async void _videoListView_Drop(object sender, DragEventArgs e)
@@ -501,6 +515,27 @@ namespace LocalNicoMyList
             }
         }
 
+        public bool getflvEnabled
+        {
+            get { return _viewModel.isCheckedGetflv; }
+            set
+            {
+                if (value)
+                {
+                    bool ret = true;
+                    if (null == _cookieHeader)
+                    {
+                        ret = this.prepareCookie();
+                    }
+                    _viewModel.setIsCheckedGetflv(ret);
+                }
+                else
+                {
+                    _viewModel.setIsCheckedGetflv(false);
+                }
+            }
+        }
+
         private async Task startGetflvTask()
         {
             try
@@ -508,37 +543,42 @@ namespace LocalNicoMyList
                 while (!_getflvCTS.IsCancellationRequested)
                 {
                     string videoId;
-                    if (null != _cookieHeader && _getflvQueue.TryDequeue(out videoId))
+                    if (_getflvQueue.TryPeek(out videoId))
                     {
-                        _viewModel.getflvText = string.Format("getflv: {1} | 残り{0}", _getflvQueue.Count + 1, videoId);
-                        int waitTime = 1000 * 30;
-                        while (!_getflvCTS.IsCancellationRequested)
+                        _viewModel.getflvText = string.Format(": {1} | 残り{0}", _getflvQueue.Count + 1, videoId);
+                        if (this.getflvEnabled && null != _cookieHeader)
                         {
-                            Console.WriteLine(videoId);
-                            NameValueCollection nameValues = await _nicoApi.getflvAsync(videoId, _cookieHeader);
-                            string threadId = nameValues.Get("thread_id");
-                            string messageServerUrl = nameValues.Get("ms");
-                            if (null != threadId && null != messageServerUrl)
+                            int waitTime = 1000 * 30;
+                            while (!_getflvCTS.IsCancellationRequested)
                             {
-                                _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
-                                _myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
-                                break;
-                            }
-                            string closed = nameValues["closed"];
-                            if (null != closed && closed.Equals("1"))
-                            {
-                                // ログアウトされてる
-                                _cookieHeader = null;
-                                _getflvQueue.Enqueue(videoId);
-                                break;
-                            }
-                            string error = nameValues["error"];
-                            if (null != error && error.Equals("access_locked"))
-                            {
-                                // アクセス制限
-                                Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
-                                await Task.Delay(waitTime, _getflvCTS.Token);
-                                waitTime += 1000;
+                                Console.WriteLine(videoId);
+                                NameValueCollection nameValues = await _nicoApi.getflvAsync(videoId, _cookieHeader);
+                                string threadId = nameValues.Get("thread_id");
+                                string messageServerUrl = nameValues.Get("ms");
+                                if (null != threadId && null != messageServerUrl)
+                                {
+                                    _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
+                                    _myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
+                                    _getflvQueue.TryDequeue(out videoId);
+                                    break;
+                                }
+                                string closed = nameValues["closed"];
+                                if (null != closed && closed.Equals("1"))
+                                {
+                                    // ログアウトされてる
+                                    _cookieHeader = null;
+                                    _viewModel.setIsCheckedGetflv(false);
+                                    break;
+                                }
+                                string error = nameValues["error"];
+                                if (null != error && error.Equals("access_locked"))
+                                {
+                                    // アクセス制限
+                                    Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
+                                    _viewModel.getflvText = string.Format(": {1} | 残り{0} [アクセス制限]", _getflvQueue.Count + 1, videoId);
+                                    await Task.Delay(waitTime, _getflvCTS.Token);
+                                    waitTime += 1000;
+                                }
                             }
                         }
                     }

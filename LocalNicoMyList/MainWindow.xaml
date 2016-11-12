@@ -228,7 +228,10 @@
             </Grid>
         </Grid>
         <StatusBar Grid.Row="1">
-            <TextBlock Text="{Binding getflvText}" />
+            <StackPanel Orientation="Horizontal">
+                <CheckBox Content="getflv" IsChecked="{Binding isCheckedGetflv}" Margin="10,0,0,0"/>
+                <TextBlock Text="{Binding getflvText}" />
+            </StackPanel>
         </StatusBar>
     </Grid>
 </Window>

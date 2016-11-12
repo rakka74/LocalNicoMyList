@@ -106,5 +106,17 @@ namespace LocalNicoMyList.Properties {
                 this["LastSelectedSortKind"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsCheckedGetflv {
+            get {
+                return ((bool)(this["IsCheckedGetflv"]));
+            }
+            set {
+                this["IsCheckedGetflv"] = value;
+            }
+        }
     }
 }
