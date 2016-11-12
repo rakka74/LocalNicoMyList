@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("LocalNicoMyList")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("MouseComputer PC")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("LocalNicoMyList")]
-[assembly: AssemblyCopyright("Copyright © MouseComputer PC 2016")]
+[assembly: AssemblyCopyright("Copyright (c) 2016 rakka")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -53,3 +53,5 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: NeutralResourcesLanguage("")]
+

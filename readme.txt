@@ -1,4 +1,5 @@
 LocalNicoMyList 1.0 (c) 2016 rakka
+https://github.com/rakka74/LocalNicoMyList
 
 ■ 概要
 ニコニコ動画のマイリストをローカルで管理するアプリケーション。
