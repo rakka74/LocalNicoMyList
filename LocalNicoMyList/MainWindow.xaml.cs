@@ -908,8 +908,18 @@ namespace LocalNicoMyList
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _folderListView.Focus();
         }
+        private void folderListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
+            _folderListView.Focus();
+        }
 
         private void videoListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
+            _videoListView.Focus();
+        }
+        private void videoListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _videoListView.Focus();
