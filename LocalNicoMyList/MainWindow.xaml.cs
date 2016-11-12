@@ -624,6 +624,12 @@ namespace LocalNicoMyList
             this.setSortKind((SortKind)((ComboBox)sender).SelectedValue);
         }
 
+
+        private void sortCB_DropDownClosed(object sender, EventArgs e)
+        {
+            FocusManager.SetFocusedElement(FocusManager.GetFocusScope(_videoListView), _videoListView);
+        }
+
         public void setSortKind(SortKind sortKind)
         {
             _myListItemCVS.SortDescriptions.Clear();
@@ -1003,7 +1009,6 @@ namespace LocalNicoMyList
             }
 
         }
-
     }
 
     public static class EnumerableExtensions

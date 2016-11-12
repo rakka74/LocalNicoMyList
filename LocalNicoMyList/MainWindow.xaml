@@ -207,7 +207,7 @@
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
                     <ComboBox x:Name="sortCB" Grid.Column="0" Width="200" HorizontalAlignment="Left" Margin="10,5,0,5"
-                          ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
+                          ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" DropDownClosed="sortCB_DropDownClosed" />
                     <Button Grid.Column="2" Margin="0,5,10,5" Padding="20,0" Click="refreshButton_Click">更新</Button>
                 </Grid>
                 <!-- マイリスト一覧 -->
