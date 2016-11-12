@@ -3,6 +3,7 @@ using LocalNicoMyList.nicoApi;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using SharpHeaderCookie;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -923,6 +925,19 @@ namespace LocalNicoMyList
         {
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _videoListView.Focus();
+        }
+
+        private void removeMyList_Click(object sender, RoutedEventArgs e)
+        {
+            var selecteedItems = _videoListView.SelectedItems.Cast<MyListItem>();
+            var selectedIndices = selecteedItems.Select(_ => _myListItemSource.IndexOf(_)).OrderByDescending(_ => _);
+            foreach (var index in selectedIndices)
+            {
+                MyListItem item = _myListItemSource.ElementAt(index);
+                _myListItemSource.RemoveAt(index);
+                _dbAccessor.deleteMyListItem(item.videoId, _selectedFolderItem.id);
+            }
+
         }
 
     }

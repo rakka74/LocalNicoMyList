@@ -212,9 +212,15 @@
                 <!-- マイリスト一覧 -->
                 <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
                           VirtualizingPanel.ScrollUnit="Pixel" MouseLeftButtonDown="videoListView_MouseLeftButtonDown" MouseRightButtonDown="videoListView_MouseRightButtonDown">
+                    <ListView.Resources>
+                        <ContextMenu x:Key="ItemContextMenu">
+                            <MenuItem Header="削除" Click="removeMyList_Click" />
+                        </ContextMenu>
+                    </ListView.Resources>
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
                             <EventSetter Event="MouseDoubleClick" Handler="MyListListViewItem_MouseDoubleClick" />
+                            <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>

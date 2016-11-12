@@ -271,6 +271,13 @@ namespace LocalNicoMyList
             }
         }
 
+        public void deleteMyListItem(string videoId, long folderId)
+        {
+            SQLiteCommand command = _conn.CreateCommand();
+            command.CommandText = string.Format("DELETE FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId, folderId);
+            command.ExecuteNonQuery();
+        }
+
         public void deleteMyListItems(long folderId)
         {
             SQLiteCommand command = _conn.CreateCommand();
