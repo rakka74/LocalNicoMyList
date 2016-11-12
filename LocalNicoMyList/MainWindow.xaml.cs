@@ -545,7 +545,7 @@ namespace LocalNicoMyList
                     string videoId;
                     if (_getflvQueue.TryPeek(out videoId))
                     {
-                        _viewModel.getflvText = string.Format(": {1} | 残り{0}", _getflvQueue.Count + 1, videoId);
+                        _viewModel.getflvText = string.Format(": {0} | 残り{1}", videoId, _getflvQueue.Count + 1);
                         if (this.getflvEnabled && null != _cookieHeader)
                         {
                             int waitTime = 1000 * 30;
@@ -560,6 +560,7 @@ namespace LocalNicoMyList
                                     _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
                                     _myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
                                     _getflvQueue.TryDequeue(out videoId);
+                                    await Task.Delay(1000, _getflvCTS.Token);
                                     break;
                                 }
                                 string closed = nameValues["closed"];
@@ -575,8 +576,14 @@ namespace LocalNicoMyList
                                 {
                                     // アクセス制限
                                     Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
-                                    _viewModel.getflvText = string.Format(": {1} | 残り{0} [アクセス制限]", _getflvQueue.Count + 1, videoId);
-                                    await Task.Delay(waitTime, _getflvCTS.Token);
+                                    int waitSec = waitTime / 1000;
+                                    do
+                                    {
+                                        _viewModel.getflvText = string.Format(": {0} | 残り{1} [アクセス制限:{2}]", videoId, _getflvQueue.Count + 1, waitSec);
+                                        await Task.Delay(1000, _getflvCTS.Token);
+                                        --waitSec;
+                                    } while (waitSec > 0);
+                                    _viewModel.getflvText = string.Format(": {0} | 残り{1}", videoId, _getflvQueue.Count + 1);
                                     waitTime += 1000;
                                 }
                             }
@@ -586,7 +593,6 @@ namespace LocalNicoMyList
                     {
                         _viewModel.getflvText = "";
                     }
-                    await Task.Delay(1000, _getflvCTS.Token);
                 }
             }
             catch(TaskCanceledException e)
