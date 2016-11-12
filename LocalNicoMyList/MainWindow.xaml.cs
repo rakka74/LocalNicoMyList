@@ -271,7 +271,7 @@ namespace LocalNicoMyList
                 }
 
                 var dialog = new TaskDialog();
-                dialog.Caption = "LocalNicoMyList";
+                dialog.Caption = Properties.Resources.WINDOW_TITLE;
                 dialog.InstructionText = "クッキーの取得ができませんでした。";
                 dialog.Text = "最新コメント日時を取得するのにニコニコ動画にログインしているクッキーが必要になります。\n" +
                     "適当なブラウザでニコニコ動画にログインした後、再試行ボタンを押してください。";
@@ -776,7 +776,7 @@ namespace LocalNicoMyList
             folderItem.isContextMenuCommandTarget = true;
 
             var dialog = new TaskDialog();
-            dialog.Caption = "LocalNicoMyList";
+            dialog.Caption = Properties.Resources.WINDOW_TITLE;
             dialog.InstructionText = "フォルダ削除";
             dialog.Text = string.Format("\"{0}\" を削除しますか？", folderItem.name);
             dialog.Icon = TaskDialogStandardIcon.Warning;

@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalNicoMyList"
+        xmlns:prop="clr-namespace:LocalNicoMyList.Properties"
         mc:Ignorable="d"
-        Title="ProgressWindow" Height="100" Width="300">
+        Title="{x:Static prop:Resources.WINDOW_TITLE}" Height="100" Width="300">
     <Grid>
         <ProgressBar x:Name="ProgressBar" Height="20" Margin="10,0"/>
     </Grid>
