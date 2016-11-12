@@ -560,7 +560,6 @@ namespace LocalNicoMyList
                                     _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
                                     _myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
                                     _getflvQueue.TryDequeue(out videoId);
-                                    await Task.Delay(1000, _getflvCTS.Token);
                                     break;
                                 }
                                 string closed = nameValues["closed"];
@@ -593,6 +592,7 @@ namespace LocalNicoMyList
                     {
                         _viewModel.getflvText = "";
                     }
+                    await Task.Delay(1000, _getflvCTS.Token);
                 }
             }
             catch(TaskCanceledException e)
