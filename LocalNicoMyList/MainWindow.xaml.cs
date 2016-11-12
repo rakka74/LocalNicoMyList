@@ -467,6 +467,7 @@ namespace LocalNicoMyList
                 // DBを更新
                 _dbAccessor.updateMyListItems(_myListItemSource, _selectedFolderItem.id);
 
+                // これをしないと更新後の値でソートされない
                 _myListItemCVS.IsLiveSortingRequested = true;
                 _myListItemCVS.IsLiveSortingRequested = false;
             }
@@ -879,6 +880,7 @@ namespace LocalNicoMyList
         private void ListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             _folderListView.Focus();
+            // ハンドルすることで右クリックでアイテムが選択されなくなる
             e.Handled = true;
         }
 

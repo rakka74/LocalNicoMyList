@@ -160,6 +160,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
+            <!-- 左ペイン：フォルダ一覧 -->
             <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single">
                 <ListView.Resources>
                     <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
@@ -176,6 +177,7 @@
                 </ListView.ItemContainerStyle>
             </ListView>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+            <!-- 右ペイン -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -191,6 +193,7 @@
                           ItemsSource="{Binding}" DisplayMemberPath="name" SelectedValuePath="id" SelectionChanged="sortCB_SelectionChanged" />
                     <Button Grid.Column="2" Margin="0,5,10,5" Padding="20,0" Click="refreshButton_Click">更新</Button>
                 </Grid>
+                <!-- マイリスト一覧 -->
                 <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
                           VirtualizingPanel.ScrollUnit="Pixel">
                     <ListView.ItemContainerStyle>
