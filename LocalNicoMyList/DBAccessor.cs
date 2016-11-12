@@ -62,8 +62,8 @@ namespace LocalNicoMyList
             using (SQLiteTransaction trans = _conn.BeginTransaction())
             {
                 command = _conn.CreateCommand();
-                command.CommandText = string.Format("INSERT INTO folder (name, orderIdx) VALUES ('{0}', {1})", 
-                    name, orderIdx);
+                command.CommandText = string.Format("INSERT INTO folder (name, orderIdx) VALUES ('{0}', {1})",
+                    name.esc(), orderIdx);
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -98,7 +98,7 @@ namespace LocalNicoMyList
                 {
                     ret.Add(new FolderRecord() {
                         id = Convert.ToInt32(reader["id"].ToString()),
-                        name = reader["name"].ToString(),
+                        name = reader["name"].ToString().unesc(),
                     });
                 }
             }
@@ -111,7 +111,7 @@ namespace LocalNicoMyList
             {
                 SQLiteCommand command = _conn.CreateCommand();
                 command.CommandText = string.Format("UPDATE folder SET name = '{0}' WHERE id = {1}",
-                        name,
+                        name.esc(),
                         folderId);
                 command.ExecuteNonQuery();
                 trans.Commit();
@@ -165,17 +165,17 @@ namespace LocalNicoMyList
                 {
                     var item = new MyListItemRecord()
                     {
-                        videoId = reader["videoId"].ToString(),
+                        videoId = reader["videoId"].ToString().unesc(),
                         createTime = DateTimeExt.fromUnixTime((long)((double)reader["createTime"])),
-                        title = reader["title"].ToString(),
-                        thumbnailUrl = reader["thumbnailUrl"].ToString(),
+                        title = reader["title"].ToString().unesc(),
+                        thumbnailUrl = reader["thumbnailUrl"].ToString().unesc(),
                         firstRetrieve = DateTimeExt.fromUnixTime((long)((double)reader["firstRetrieve"])),
                         length = TimeSpan.FromSeconds((double)reader["length"]),
                         viewCounter = (int)((long)reader["viewCounter"]),
                         commentNum = (int)((long)reader["commentNum"]),
                         mylistCounter = (int)((long)reader["mylistCounter"]),
-                        threadId = (reader["thread_id"].GetType() != typeof(DBNull)) ? reader["thread_id"].ToString() : null,
-                        messageServerUrl = (reader["ms"].GetType() != typeof(DBNull)) ? reader["ms"].ToString() : null
+                        threadId = (reader["thread_id"].GetType() != typeof(DBNull)) ? reader["thread_id"].ToString().unesc() : null,
+                        messageServerUrl = (reader["ms"].GetType() != typeof(DBNull)) ? reader["ms"].ToString().unesc() : null
                     };
                     var latestCommentTime = reader["latestCommentTime"];
                     if (!(latestCommentTime is System.DBNull))
@@ -195,11 +195,11 @@ namespace LocalNicoMyList
             {
                 command = _conn.CreateCommand();
                 command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9}",
-                        item.videoId,
+                        item.videoId.esc(),
                         item.createTime.toUnixTime(),
                         folderId,
-                        item.title.Replace("'", "''"),
-                        item.thumbnailUrl,
+                        item.title.esc(),
+                        item.thumbnailUrl.esc(),
                         item.firstRetrieve.toUnixTime(),
                         item.length.TotalSeconds,
                         item.viewCounter,
@@ -227,11 +227,11 @@ namespace LocalNicoMyList
                 {
                     command = _conn.CreateCommand();
                     command.CommandText = string.Format("INSERT INTO myListItem VALUES ('{0}', {1}, {2}, '{3}', '{4}', {5}, {6}, {7}, {8}, {9}",
-                            item.videoId,
+                            item.videoId.esc(),
                             item.createTime.toUnixTime(),
                             folderId,
-                            item.title.Replace("'", "''"),
-                            item.thumbnailUrl,
+                            item.title.esc(),
+                            item.thumbnailUrl.esc(),
                             item.firstRetrieve.toUnixTime(),
                             item.length.TotalSeconds,
                             item.viewCounter,
@@ -257,13 +257,13 @@ namespace LocalNicoMyList
                 {
                     command = _conn.CreateCommand();
                     command.CommandText = string.Format("UPDATE myListItem SET title='{0}', viewCounter={1}, commentNum={2}, mylistCounter={3}",
-                            item.title.Replace("'", "''"),
+                            item.title.esc(),
                             item.viewCounter,
                             item.commentNum,
                             item.mylistCounter);
                     if (item.latestCommentTime.HasValue)
                         command.CommandText = string.Format("{0}, latestCommentTime={1}", command.CommandText, item.latestCommentTime.Value.toUnixTime());
-                    command.CommandText = string.Format("{0} WHERE folderId = {1} AND videoId='{2}'", command.CommandText, folderId, item.videoId);
+                    command.CommandText = string.Format("{0} WHERE folderId = {1} AND videoId='{2}'", command.CommandText, folderId, item.videoId.esc());
 
                     command.ExecuteNonQuery();
                 }
@@ -274,7 +274,7 @@ namespace LocalNicoMyList
         public void deleteMyListItem(string videoId, long folderId)
         {
             SQLiteCommand command = _conn.CreateCommand();
-            command.CommandText = string.Format("DELETE FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId, folderId);
+            command.CommandText = string.Format("DELETE FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId.esc(), folderId);
             command.ExecuteNonQuery();
         }
 
@@ -289,7 +289,7 @@ namespace LocalNicoMyList
         {
             SQLiteCommand command;
             command = _conn.CreateCommand();
-            command.CommandText = string.Format("SELECT COUNT(*) FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId, folderId);
+            command.CommandText = string.Format("SELECT COUNT(*) FROM myListItem WHERE videoId = '{0}' AND folderId = {1}", videoId.esc(), folderId);
             return 0 < Convert.ToInt32(command.ExecuteScalar());
         }
 
@@ -319,7 +319,7 @@ namespace LocalNicoMyList
             using (SQLiteTransaction trans = _conn.BeginTransaction())
             {
                 command = _conn.CreateCommand();
-                command.CommandText = string.Format("INSERT INTO getflvInfo (videoId) VALUES ('{0}')", videoId);
+                command.CommandText = string.Format("INSERT INTO getflvInfo (videoId) VALUES ('{0}')", videoId.esc());
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -331,9 +331,9 @@ namespace LocalNicoMyList
             {
                 SQLiteCommand command = _conn.CreateCommand();
                 command.CommandText = string.Format("UPDATE getflvInfo SET thread_id = '{0}', ms = '{1}' WHERE videoId = '{2}'",
-                        threadId,
-                        ms,
-                        videoId);
+                        threadId.esc(),
+                        ms.esc(),
+                        videoId.esc());
                 command.ExecuteNonQuery();
                 trans.Commit();
             }
@@ -343,7 +343,7 @@ namespace LocalNicoMyList
         {
             SQLiteCommand command;
             command = _conn.CreateCommand();
-            command.CommandText = string.Format("SELECT COUNT(*) FROM getflvInfo WHERE videoId = '{0}'", videoId);
+            command.CommandText = string.Format("SELECT COUNT(*) FROM getflvInfo WHERE videoId = '{0}'", videoId.esc());
             return 0 < Convert.ToInt32(command.ExecuteScalar());
         }
 
@@ -360,9 +360,9 @@ namespace LocalNicoMyList
                 {
                     ret.Add(new GetflvInfoRecord()
                     {
-                        videoId = reader["videoId"].ToString(),
-                        messageServerUrl = reader["ms"].ToString(),
-                        threadId = reader["thread_id"].ToString(),
+                        videoId = reader["videoId"].ToString().unesc(),
+                        messageServerUrl = reader["ms"].ToString().unesc(),
+                        threadId = reader["thread_id"].ToString().unesc(),
                     });
                 }
             }
@@ -375,16 +375,16 @@ namespace LocalNicoMyList
 
             SQLiteCommand command;
             command = _conn.CreateCommand();
-            command.CommandText = string.Format("SELECT * FROM getflvInfo WHERE videoId = '{0}'", videoId);
+            command.CommandText = string.Format("SELECT * FROM getflvInfo WHERE videoId = '{0}'", videoId.esc());
             using (SQLiteDataReader reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
                     ret = new GetflvInfoRecord()
                     {
-                        videoId = reader["videoId"].ToString(),
-                        messageServerUrl = reader["ms"].ToString(),
-                        threadId = reader["thread_id"].ToString(),
+                        videoId = reader["videoId"].ToString().unesc(),
+                        messageServerUrl = reader["ms"].ToString().unesc(),
+                        threadId = reader["thread_id"].ToString().unesc(),
                     };
                     break;
                 }
@@ -395,4 +395,18 @@ namespace LocalNicoMyList
         #endregion
 
     }
+
+    static class stringExt
+    {
+        public static string esc(this string src)
+        {
+            return src.Replace("'", "''");
+        }
+
+        public static string unesc(this string src)
+        {
+            return src.Replace("''", "'");
+        }
+    }
+
 }
