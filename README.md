@@ -12,12 +12,6 @@
 ### スクリーンショット
 ![タイトル](screenshot.png)
 
-### TODO
-* マイリストの削除機能
-* getflvのON/OFF設定
-* サムネイル画像の表示について、ImageのSourceでサムネイルURLを指定しているが、表示のタイミングでダウンロードしにいっているようで表示に時間がかかることがあるのでローカルにキャッシュするようにする。
-* TextBlockで日本語にU+0335 COMBINING SHORT STROKE OVERLAYを混ぜた文字列が文字化けするのを何とかする。WebBrowserだと文字化けしない。
-
 ### 使用ライブラリ
 * DynamicJson (c) neuecc
 * ListViewDragDropManager (c) Josh Smith, Anthony Perez
