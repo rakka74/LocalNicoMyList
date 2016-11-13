@@ -145,6 +145,40 @@ namespace LocalNicoMyList
                 _isCheckedGetflv = value;
                 OnPropertyChanged("isCheckedGetflv");
             }
+
+            private Visibility _filterOnVisibility = Visibility.Visible;
+            public Visibility filterOnVisibility
+            {
+                get { return _filterOnVisibility; }
+                set
+                {
+                    _filterOnVisibility = value;
+                    OnPropertyChanged("filterOnVisibility");
+                }
+            }
+
+            private Visibility _filterOffVisibility = Visibility.Collapsed;
+            public Visibility filterOffVisibility
+            {
+                get { return _filterOffVisibility; }
+                set
+                {
+                    _filterOffVisibility = value;
+                    OnPropertyChanged("filterOffVisibility");
+                }
+            }
+
+            private string _titleFilterText = "";
+            public string titleFilterText
+            {
+                get { return _titleFilterText; }
+                set
+                {
+                    _titleFilterText = value;
+                    OnPropertyChanged("titleFilterText");
+                }
+            }
+
         }
 
         public MainWindow()
@@ -187,6 +221,7 @@ namespace LocalNicoMyList
             // マイリスト一覧初期化
             _myListItemCVS = new CollectionViewSource();
             _myListItemCVS.Source = _myListItemSource;
+            _myListItemCVS.Filter += titleFilter;
             _videoListView.DataContext = _myListItemCVS;
 
             // コンボボックス初期化
@@ -1015,6 +1050,45 @@ namespace LocalNicoMyList
                 _dbAccessor.deleteMyListItem(item.videoId, _selectedFolderItem.id);
             }
 
+        }
+
+        private void titleFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox targetTextBox = (TextBox)sender;
+
+            if (targetTextBox.Text == "")
+            {
+                _viewModel.filterOnVisibility = Visibility.Visible;
+                _viewModel.filterOffVisibility = Visibility.Collapsed;
+            }
+            else
+            {
+                _viewModel.filterOffVisibility = Visibility.Visible;
+                _viewModel.filterOnVisibility = Visibility.Collapsed;
+            }
+            _myListItemCVS.IsLiveFilteringRequested = true;
+            _myListItemCVS.IsLiveFilteringRequested = false;
+        }
+
+        private void titleFilter(object sender, FilterEventArgs e)
+        {
+            MyListItem item = e.Item as MyListItem;
+            if (item != null)
+            {
+                if (item.title.Contains(_viewModel.titleFilterText))
+                {
+                    e.Accepted = true;
+                }
+                else
+                {
+                    e.Accepted = false;
+                }
+            }
+        }
+
+        private void filterOff_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _viewModel.titleFilterText = "";
         }
     }
 
