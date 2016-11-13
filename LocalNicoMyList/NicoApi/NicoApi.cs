@@ -100,6 +100,7 @@ namespace LocalNicoMyList.nicoApi
             return this.parseQueryString(ret);
         }
 
+        // コメントが存在しない場合、nullを返す。失敗した場合は例外をスロー
         public async Task<DateTime?> getLatestCommentTimeAsync(string threadId, string messageServerUrl)
         {
             try
@@ -113,15 +114,16 @@ namespace LocalNicoMyList.nicoApi
                 XmlElement root = xdoc.DocumentElement;
                 XmlNode chat = root?.SelectSingleNode("chat");
                 if (null == chat)   // コメントが存在しない場合
-                    return DateTimeExt.fromUnixTime(0);
+                    return null;
                 return DateTimeExt.fromUnixTime(long.Parse(chat.Attributes["date"].Value));
             }
             catch(Exception e)
             {
                 Console.WriteLine("NicoApi.getLatestCommentTimeAsync()");
                 Console.WriteLine(e);
+
+                throw e;
             }
-            return null;
         }
 
         NameValueCollection parseQueryString(string query)

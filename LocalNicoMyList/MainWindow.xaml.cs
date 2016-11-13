@@ -525,7 +525,19 @@ namespace LocalNicoMyList
                     DateTime? latestCommentTime = null;
                     if (null != item.threadId)
                     {
-                        latestCommentTime = await _nicoApi.getLatestCommentTimeAsync(item.threadId, item.messageServerUrl);
+                        try
+                        {
+                            latestCommentTime = await _nicoApi.getLatestCommentTimeAsync(item.threadId, item.messageServerUrl);
+                            if (null == latestCommentTime)
+                            {
+                                // コメント数が0の場合、投稿日時をセット
+                                latestCommentTime = item.firstRetrieve;
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            latestCommentTime = null;
+                        }
                     }
 
                     MyListItem myListItem = _myListItemSource.First(_ => _.videoId.Equals(videoId));
