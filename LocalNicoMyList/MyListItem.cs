@@ -34,6 +34,15 @@ namespace LocalNicoMyList
                 OnPropertyChanged("title");
             }
         }
+
+        public string lengthText
+        {
+            get
+            {
+                return string.Format("{0}:{1:D2}", Math.Floor(this.length.TotalMinutes), this.length.Seconds);
+            }
+        }
+
         public int viewCounter
         {
             get { return _viewCounter; }
