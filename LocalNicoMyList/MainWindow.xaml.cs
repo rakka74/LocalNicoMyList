@@ -1052,7 +1052,7 @@ namespace LocalNicoMyList
                 _myListItemSource.RemoveAt(index);
                 _dbAccessor.deleteMyListItem(item.videoId, _selectedFolderItem.id);
             }
-
+            _selectedFolderItem.count = _myListItemSource.Count;
         }
 
         private void titleFilter_TextChanged(object sender, TextChangedEventArgs e)
