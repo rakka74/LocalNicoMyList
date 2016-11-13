@@ -495,6 +495,9 @@ namespace LocalNicoMyList
 
         private async void refreshButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_myListItemSource.Count == 0)
+                return;
+
             var progressWindow = new ProgressWindow();
             var progress = new Progress<int>(value =>
             {
