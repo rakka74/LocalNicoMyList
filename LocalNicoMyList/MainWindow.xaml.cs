@@ -407,6 +407,7 @@ namespace LocalNicoMyList
             try
             {
                 var myListItems = new System.Collections.Concurrent.ConcurrentBag<MyListItem>();
+                int count = 0;
                 Func<dynamic, Task> action = async (item) =>
                 {
                     var videoId = item["item_data"]["video_id"];
@@ -417,8 +418,9 @@ namespace LocalNicoMyList
                     if (null != myListItem)
                     {
                         myListItems.Add(myListItem);
-                        progress.Report(myListItems.Count);
                     }
+                    Interlocked.Add(ref count, 1);
+                    progress.Report(count);
                 };
 
                 await jsonItems.ForEachAsync(action, 10, token);
