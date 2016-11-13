@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -1090,7 +1091,10 @@ namespace LocalNicoMyList
             MyListItem item = e.Item as MyListItem;
             if (item != null)
             {
-                if (item.title.Contains(_viewModel.titleFilterText))
+                // カタカナ、ひらがな、全角、半角、大文字、小文字を区別なく比較
+                CompareInfo ci = CultureInfo.CurrentCulture.CompareInfo;
+                int index = ci.IndexOf(item.title, _viewModel.titleFilterText, CompareOptions.IgnoreKanaType | CompareOptions.IgnoreCase | CompareOptions.IgnoreWidth);
+                if (0 <= index)
                 {
                     e.Accepted = true;
                 }
