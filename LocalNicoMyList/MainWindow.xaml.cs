@@ -723,14 +723,14 @@ namespace LocalNicoMyList
                 case SortKind.PostTimeDescend: // 投稿が新しい順
                     sortDescription = new SortDescription
                     {
-                        PropertyName = "postTime",
+                        PropertyName = "firstRetrieve",
                         Direction = ListSortDirection.Descending
                     };
                     break;
                 case SortKind.PostTimeAscend: // 投稿が古い順
                     sortDescription = new SortDescription
                     {
-                        PropertyName = "postTime",
+                        PropertyName = "firstRetrieve",
                         Direction = ListSortDirection.Ascending
                     };
                     break;
