@@ -170,8 +170,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Readme-SharpHeaderCookie.txt" />
-    <Resource Include="Resources\Images\filter_off.png" />
-    <Resource Include="Resources\Images\filter_on.png" />
+    <Resource Include="Resources\Images\filter.png" />
+    <Resource Include="Resources\Images\filter_off_mouseover.png" />
+    <Resource Include="Resources\Images\filter_off_normal.png" />
     <Content Include="x86\IEPCookie.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
