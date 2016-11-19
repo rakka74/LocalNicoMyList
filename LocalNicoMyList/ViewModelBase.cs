@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LocalNicoMyList
 {
-    class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged
     {
         // Declare the event
         public event PropertyChangedEventHandler PropertyChanged;

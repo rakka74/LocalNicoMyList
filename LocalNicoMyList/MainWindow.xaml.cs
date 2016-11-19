@@ -95,12 +95,10 @@ namespace LocalNicoMyList
     /// </summary>
     public partial class MainWindow : Window
     {
-        ObservableCollection<FolderItem> _folderListItemSource;
         ObservableCollection<MyListItem> _myListItemSource;
         string _cookieHeader;
         NicoApi _nicoApi;
-        DBAccessor _dbAccessor;
-        FolderItem _selectedFolderItem;
+        public DBAccessor _dbAccessor { get; private set; }
         CollectionViewSource _myListItemCVS;
         public ObservableCollection<SortItem> _sortCBItems;
 
@@ -182,9 +180,13 @@ namespace LocalNicoMyList
 
         }
 
+        public static MainWindow instance;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            instance = this;
 
             if (0 != Properties.Settings.Default.MainWindow_Left)
             {
@@ -210,14 +212,11 @@ namespace LocalNicoMyList
             }
             folderRecordList = _dbAccessor.getFolder();
 
-            _folderListItemSource = new ObservableCollection<FolderItem>();
             foreach (FolderRecord folderRecord in folderRecordList)
             {
                 int count = _dbAccessor.getMyListCount(folderRecord.id);
-                _folderListItemSource.Add(new FolderItem(folderRecord, count));
+                folderView._folderListItemSource.Add(new FolderItem(folderRecord, count));
             }
-
-            _folderListView.DataContext = _folderListItemSource;
 
             // マイリスト一覧初期化
             _myListItemCVS = new CollectionViewSource();
@@ -261,22 +260,18 @@ namespace LocalNicoMyList
             this.DataContext = _viewModel;
         }
 
-        ListViewDragDropManager<FolderItem> _lvDDMan;
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _lvDDMan = new ListViewDragDropManager<FolderItem>(_folderListView);
-            _lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
-
-            _folderListView.Focus();
+ 
+            folderView._folderListView.Focus();
 
             // 前回終了時のフォルダを選択
             long folderId = Properties.Settings.Default.LastSelectedFolderId;
-            var folderItem = _folderListItemSource.FirstOrDefault(_ => { return _.id == folderId; });
+            var folderItem = folderView._folderListItemSource.FirstOrDefault(_ => { return _.id == folderId; });
             if (null != folderItem)
-                _folderListView.SelectedItem = folderItem;
+                folderView._folderListView.SelectedItem = folderItem;
             else
-                _folderListView.SelectedIndex = 0;
+                folderView._folderListView.SelectedIndex = 0;
 
             this.getflvEnabled = Properties.Settings.Default.IsCheckedGetflv;
 
@@ -288,13 +283,6 @@ namespace LocalNicoMyList
 
             _getflvCTS = new CancellationTokenSource();
             _getflvTask = this.startGetflvTask();
-        }
-
-        private void LvDDMan_ProcessDrop(object sender, ProcessDropEventArgs<FolderItem> e)
-        {
-            _folderListItemSource.Move(e.OldIndex, e.NewIndex);
-            // DBに保存
-            _dbAccessor.updateFolderOrderIdx(_folderListItemSource);
         }
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -310,8 +298,8 @@ namespace LocalNicoMyList
             Properties.Settings.Default.MainWindow_Top = Top;
             Properties.Settings.Default.MainWindow_Width = Width;
             Properties.Settings.Default.MainWindow_Height = Height;
-            Properties.Settings.Default.Folder_Width = _folderListView.ActualWidth;
-            Properties.Settings.Default.LastSelectedFolderId = _selectedFolderItem.id;
+            Properties.Settings.Default.Folder_Width = folderView._folderListView.ActualWidth;
+            Properties.Settings.Default.LastSelectedFolderId = folderView._selectedFolderItem.id;
             Properties.Settings.Default.LastSelectedSortKind = Enum.GetName(typeof(SortKind), (SortKind)sortCB.SelectedValue);
             Properties.Settings.Default.IsCheckedGetflv = _viewModel.isCheckedGetflv;
 
@@ -376,10 +364,10 @@ namespace LocalNicoMyList
                 var item = MyListItem.from(res, latestCommentTime, DateTime.Now);
                 if (null != item)
                 {
-                    if (!_dbAccessor.isExistMyListItem(videoId, _selectedFolderItem.id))
+                    if (!_dbAccessor.isExistMyListItem(videoId, folderView._selectedFolderItem.id))
                     {
                         _myListItemSource.Add(item);
-                        _dbAccessor.addMyListItem(item, _selectedFolderItem.id);
+                        _dbAccessor.addMyListItem(item, folderView._selectedFolderItem.id);
                         GetflvInfoRecord getflvInfo = _dbAccessor.getGetflvInfo(videoId);
                         if (null == getflvInfo)
                         {
@@ -390,7 +378,7 @@ namespace LocalNicoMyList
                         {
                             item.setGetflv(getflvInfo);
                         }
-                        _selectedFolderItem.count = _myListItemSource.Count;
+                        folderView._selectedFolderItem.count = _myListItemSource.Count;
                     }
                 }
             }
@@ -419,7 +407,7 @@ namespace LocalNicoMyList
                         var jsonItems = (dynamic[])json;
                         var jsonItems2 = jsonItems.Where((item) => {
                             var videoId = item["item_data"]["video_id"];
-                            return !_dbAccessor.isExistMyListItem(videoId, _selectedFolderItem.id);
+                            return !_dbAccessor.isExistMyListItem(videoId, folderView._selectedFolderItem.id);
                         });
 
 
@@ -462,7 +450,7 @@ namespace LocalNicoMyList
                 await jsonItems.ForEachAsync(action, 10, token);
 
                 // DBに追加
-                _dbAccessor.addMyListItems(myListItems, _selectedFolderItem.id);
+                _dbAccessor.addMyListItems(myListItems, folderView._selectedFolderItem.id);
                 foreach (var item in myListItems)
                 {
                     var getflvInfo = _dbAccessor.getGetflvInfo(item.videoId);
@@ -482,7 +470,7 @@ namespace LocalNicoMyList
                 _myListItemSource = new ObservableCollection<MyListItem>(list);
                 _myListItemCVS.Source = _myListItemSource;
 
-                _selectedFolderItem.count = list.Count;
+                folderView._selectedFolderItem.count = list.Count;
             }
             catch (Exception e)
             {
@@ -554,7 +542,7 @@ namespace LocalNicoMyList
                 await myListItems.ForEachAsync(action, 10, token);
 
                 // DBを更新
-                _dbAccessor.updateMyListItems(_myListItemSource, _selectedFolderItem.id);
+                _dbAccessor.updateMyListItems(_myListItemSource, folderView._selectedFolderItem.id);
 
                 // これをしないと更新後の値でソートされない
                 _myListItemCVS.IsLiveSortingRequested = true;
@@ -657,21 +645,6 @@ namespace LocalNicoMyList
             {
                 Console.WriteLine(e2);
             }
-        }
-
-        private void _folderListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            FolderItem item = e.AddedItems[0] as FolderItem;
-            _selectedFolderItem = item;
-
-            // DBから情報を取得して動画一覧の内容を更新
-            _myListItemSource = new ObservableCollection<MyListItem>();
-            foreach (var record in _dbAccessor.getMyListItem(item.id))
-            {
-                _myListItemSource.Add(new MyListItem(record));
-            }
-
-            _myListItemCVS.Source = _myListItemSource;
         }
 
         private void sortCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -819,229 +792,35 @@ namespace LocalNicoMyList
             }
         }
 
-        private void addFolder_Click(object sender, RoutedEventArgs e)
+        public void folderListView_SelectionChanged(FolderItem item)
         {
-            this.addFolder();
-        }
-
-        private FolderItem getAnchorFolderItem(ContextMenu menu)
-        {
-            ListViewItem listViewItem = menu.PlacementTarget as ListViewItem;
-            FolderItem folderItem = listViewItem?.Content as FolderItem;
-            return folderItem;
-        }
-
-        private void removeFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var menuItem = sender as MenuItem;
-            var menu = menuItem.Parent as ContextMenu;
-            this.removeFolder(this.getAnchorFolderItem(menu));
-        }
-
-        private void renameFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var menuItem = sender as MenuItem;
-            var menu = menuItem.Parent as ContextMenu;
-            this.renameFolder(this.getAnchorFolderItem(menu));
-        }
-
-        private void addFolder()
-        {
-            string baseName = "新しいフォルダー";
-            string name;
-            int num = 1;
-            while (true)
+            // DBから情報を取得して動画一覧の内容を更新
+            _myListItemSource = new ObservableCollection<MyListItem>();
+            foreach (var record in _dbAccessor.getMyListItem(item.id))
             {
-                name = (1 == num) ? baseName : string.Format("{0} ({1})", baseName, num);
-                if (null == _folderListItemSource.FirstOrDefault((_) => { return _.name.Equals(name); }))
-                    break;
-                ++num;
+                _myListItemSource.Add(new MyListItem(record));
             }
 
-            long folderId = _dbAccessor.addFolder(name, _folderListItemSource.Count);
-            FolderItem folderItem = new FolderItem(folderId, name);
-            _folderListItemSource.Add(folderItem);
-
-            int index = _folderListItemSource.IndexOf(folderItem);
-            this.Dispatcher.BeginInvoke((Action)(async () =>
-            {
-                while(true)
-                {
-                    var viewItem = _folderListView.ItemContainerGenerator.ContainerFromIndex(index) as ListViewItem;
-                    if (null != viewItem) break;
-                    await Task.Delay(100);
-                }
-                startEditFolderListItem(folderItem);
-            }));
+            _myListItemCVS.Source = _myListItemSource;
         }
 
-        private void removeFolder(FolderItem folderItem)
+        public void removedFolderItem(FolderItem folderItem)
         {
-            if (_folderListItemSource.Count == 1)
-                return;
+            _dbAccessor.deleteMyListItems(folderItem.id);
+            _dbAccessor.deleteFolder(folderItem.id);
+        }
 
-            folderItem.isContextMenuCommandTarget = true;
-
-            var dialog = new TaskDialog();
-            dialog.Caption = Properties.Resources.WINDOW_TITLE;
-            dialog.InstructionText = "フォルダ削除";
-            dialog.Text = string.Format("\"{0}\" を削除しますか？", folderItem.name);
-            dialog.Icon = TaskDialogStandardIcon.Warning;
-            dialog.StandardButtons = TaskDialogStandardButtons.Yes | TaskDialogStandardButtons.No;
-            dialog.OwnerWindowHandle = new WindowInteropHelper(this).Handle; 
-            var result = dialog.Show();
-
-            folderItem.isContextMenuCommandTarget = false;
-
-            if (TaskDialogResult.Yes == result)
+        public void renamedFolderItem(FolderItem folderItem)
+        {
+            if (folderItem.id == -1)
             {
-                // 現在選択されているフォルダが削除される場合、別のフォルダを選択
-                if (Object.ReferenceEquals(folderItem, _selectedFolderItem))
-                {
-                    int index = _folderListItemSource.IndexOf(folderItem);
-                    if (index + 1 < _folderListItemSource.Count)
-                        ++index;
-                    else
-                        --index;
-                    _folderListView.SelectedIndex = index;
-                }
-
-                // 削除
-                long folderId = folderItem.id;
-                _dbAccessor.deleteMyListItems(folderId);
-                _dbAccessor.deleteFolder(folderId);
-                _folderListItemSource.Remove(folderItem);
+                long folderId = _dbAccessor.addFolder(folderItem.name, folderView._folderListItemSource.Count);
+                folderItem.id = folderId;
             }
-        }
-
-        private void renameFolder(FolderItem folderItem)
-        {
-            startEditFolderListItem(folderItem);
-        }
-
-        FolderItem _editingFolderItem;
-        TextBox _folderListTextBox;
-
-        private void startEditFolderListItem(FolderItem folderItem)
-        {
-            int index = _folderListItemSource.IndexOf(folderItem);
-            var viewItem = _folderListView.ItemContainerGenerator.ContainerFromIndex(index) as ListViewItem;
-
-            // get template
-            ContentPresenter myContentPresenter = FindVisualChild<ContentPresenter>(viewItem);
-            DataTemplate template = myContentPresenter.ContentTemplate;
-
-            // get controls in template
-            var textBox = (template.FindName("textBox", myContentPresenter) as TextBox);
-            textBox.Text = folderItem.name;
-            textBox.SelectAll();
-            textBox.Visibility = Visibility.Visible;
-            textBox.Focus();
-
-            _editingFolderItem = folderItem;
-            _folderListTextBox = textBox;
-
-            _lvDDMan.ListView = null;
-        }
-
-        private void endEditFolderListItem(bool cancel = false)
-        {
-            _lvDDMan.ListView = _folderListView;
-
-            if (null == _editingFolderItem)
-                return;
-
-            if (!cancel)
+            else
             {
-                var newName = _folderListTextBox.Text;
-                // 前後の空白を削除
-                newName = newName.Trim();
-                _editingFolderItem.name = newName;
-                _dbAccessor.updateFolderName(_editingFolderItem.id, newName);
+                _dbAccessor.updateFolderName(folderItem.id, folderItem.name);
             }
-
-            var textBox = _folderListTextBox;
-
-            _editingFolderItem = null;
-            _folderListTextBox = null;
-
-            _folderListView.Focus();
-
-            textBox.Visibility = Visibility.Collapsed;
-        }
-
-        private childItem FindVisualChild<childItem>(DependencyObject obj)
-                 where childItem : DependencyObject
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                if (child != null && child is childItem)
-                    return (childItem)child;
-                else
-                {
-                    childItem childOfChild = FindVisualChild<childItem>(child);
-                    if (childOfChild != null)
-                        return childOfChild;
-                }
-            }
-            return null;
-        }
-
-        private void folderListTextBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            this.endEditFolderListItem();
-        }
-
-        private void folderListTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Return)
-            {
-                this.endEditFolderListItem();
-            }
-            else if (e.Key == Key.Escape)
-            {
-                this.endEditFolderListItem(true);
-            }
-        }
-
-        FolderItem _cotextMenuFolderItem;
-
-        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
-        {
-            if (null != _cotextMenuFolderItem)
-                _cotextMenuFolderItem.showedContextMenu = false;
-
-            ContextMenu menu = sender as ContextMenu;
-            var folderItem = this.getAnchorFolderItem(menu);
-            folderItem.showedContextMenu = true;
-            _cotextMenuFolderItem = folderItem;
-        }
-
-        private void ContextMenu_Closed(object sender, RoutedEventArgs e)
-        {
-            ContextMenu menu = sender as ContextMenu;
-            var folderItem = this.getAnchorFolderItem(menu);
-            folderItem.showedContextMenu = false;
-            _cotextMenuFolderItem = null;
-        }
-
-        private void folderListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            _folderListView.Focus();
-            // ハンドルすることで右クリックでアイテムが選択されなくなる
-            e.Handled = true;
-        }
-
-        private void folderListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
-            _folderListView.Focus();
-        }
-        private void folderListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
-            _folderListView.Focus();
         }
 
         private void videoListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1063,9 +842,9 @@ namespace LocalNicoMyList
             {
                 MyListItem item = _myListItemSource.ElementAt(index);
                 _myListItemSource.RemoveAt(index);
-                _dbAccessor.deleteMyListItem(item.videoId, _selectedFolderItem.id);
+                _dbAccessor.deleteMyListItem(item.videoId, folderView._selectedFolderItem.id);
             }
-            _selectedFolderItem.count = _myListItemSource.Count;
+            folderView._selectedFolderItem.count = _myListItemSource.Count;
         }
 
         private void titleFilter_TextChanged(object sender, TextChangedEventArgs e)

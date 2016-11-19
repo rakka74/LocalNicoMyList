@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LocalNicoMyList
 {
-    class DBAccessor : IDisposable
+    public class DBAccessor : IDisposable
     {
         SQLiteConnection _conn;
 

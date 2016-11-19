@@ -116,21 +116,6 @@
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
-        <DataTemplate x:Key="FolderListDataTemplate">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{Binding name}" FontSize="12" />
-                    <TextBlock FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="[{0}]">
-                                <Binding Path="count" />
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
-                </StackPanel>
-                <TextBox x:Name="textBox" FontSize="12" Visibility="Collapsed" LostFocus="folderListTextBox_LostFocus" KeyDown="folderListTextBox_KeyDown" />
-            </Grid>
-        </DataTemplate>
         <DataTemplate x:Key="VideoListDataTemplate">
             <StackPanel Orientation="Horizontal" Margin="0,5">
                 <Grid Width="100" Height="76" Background="Black">
@@ -175,27 +160,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- 左ペイン：フォルダ一覧 -->
-            <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single"
-                      MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown">
-                <ListView.Resources>
-                    <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
-                        <MenuItem Header="追加" Click="addFolder_Click" />
-                        <MenuItem Header="削除" Click="removeFolder_Click" />
-                        <MenuItem Header="名前の変更" Click="renameFolder_Click" />
-                    </ContextMenu>
-                </ListView.Resources>
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="folderListViewItem_PreviewMouseRightButtonDown" />
-                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="追加" Click="addFolder_Click" />
-                    </ContextMenu>
-                </ListView.ContextMenu>
-            </ListView>
+            <local:FolderView Grid.Column="0" x:Name="folderView"/>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
             <!-- 右ペイン -->
             <Grid Grid.Column="2">

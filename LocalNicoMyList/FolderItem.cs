@@ -8,7 +8,7 @@ using static LocalNicoMyList.DBAccessor;
 
 namespace LocalNicoMyList
 {
-    class FolderItem : ViewModelBase
+    public class FolderItem : ViewModelBase
     {
         public long id;
 

@@ -9,7 +9,7 @@ using static LocalNicoMyList.DBAccessor;
 
 namespace LocalNicoMyList
 {
-    class MyListItem : ViewModelBase
+    public class MyListItem : ViewModelBase
     {
         public string videoId { get; set; }
         private string _title;
