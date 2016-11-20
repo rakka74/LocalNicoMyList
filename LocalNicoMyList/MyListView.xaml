@@ -92,27 +92,6 @@
                     <Setter Property="Foreground" Value="Black"/>
                     <Setter Property="BorderBrush" Value="#e5f3ff"/>
                 </MultiDataTrigger>
-                <!-- コンテキストメニュー表示時、クリックされたアイテム -->
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=DataContext.showedContextMenu, RelativeSource={RelativeSource Self}}" Value="True" />
-                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="False"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Background" Value="#cde8ff"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                    <Setter Property="BorderBrush" Value="#cde8ff"/>
-                </MultiDataTrigger>
-                <!-- コンテキストメニューで削除が選択されるとメッセージボックスが表示されるが、コンテキストメニューが消えてshowdContextMenuがfalseになって
-                        削除対象のフォルダの背景色がなくなって違和感があったので -->
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=DataContext.isContextMenuCommandTarget, RelativeSource={RelativeSource Self}}" Value="True" />
-                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="False"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Background" Value="#cde8ff"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                    <Setter Property="BorderBrush" Value="#cde8ff"/>
-                </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <DataTemplate x:Key="VideoListDataTemplate">
