@@ -113,6 +113,15 @@
                     <Setter Property="Foreground" Value="Black"/>
                     <Setter Property="BorderBrush" Value="#cde8ff"/>
                 </MultiDataTrigger>
+                <!-- MyListItemのドロップターゲットのアイテム -->
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=DataContext.isMyListItemDropTarget, RelativeSource={RelativeSource Self}}" Value="True" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#cde8ff"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderBrush" Value="#cde8ff"/>
+                </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <DataTemplate x:Key="FolderListDataTemplate">
@@ -133,7 +142,7 @@
     </UserControl.Resources>
     <Grid>
         <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single"
-                      MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown">
+                        MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown">
             <ListView.Resources>
                 <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
                     <MenuItem Header="追加" Click="addFolder_Click" />
@@ -144,6 +153,10 @@
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="folderListViewItem_PreviewMouseRightButtonDown" />
+                    <EventSetter Event="DragEnter" Handler="folderListViewItem_DragEnter" />
+                    <EventSetter Event="DragLeave" Handler="folderListViewItem_DragLeave" />
+                    <EventSetter Event="DragOver" Handler="folderListViewItem_DragOver" />
+                    <EventSetter Event="Drop" Handler="folderListViewItem_Drop" />
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
                 </Style>
             </ListView.ItemContainerStyle>

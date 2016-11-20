@@ -69,6 +69,8 @@ namespace LocalNicoMyList
             _folderListView.Focus();
         }
 
+        #region ■■■■■ フォルダ一覧 ListViewItem
+
         private void folderListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             _folderListView.Focus();
@@ -76,7 +78,72 @@ namespace LocalNicoMyList
             e.Handled = true;
         }
 
+        private void folderListViewItem_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(FolderItem)))
+                return;
+
+            var lvi = sender as ListViewItem;
+            var folderItem = lvi.DataContext as FolderItem;
+
+            if (folderItem.id != _selectedFolderItem.id && e.Data.GetDataPresent(typeof(MyListItem)))
+            {
+                if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                    e.Effects = DragDropEffects.Copy;
+                else
+                    e.Effects = DragDropEffects.Move;
+                // ドロップ先のフォルダのListViewItemの色を変更
+                folderItem.isMyListItemDropTarget = true;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void folderListViewItem_DragLeave(object sender, DragEventArgs e)
+        {
+            var lvi = sender as ListViewItem;
+            var folderItem = lvi.DataContext as FolderItem;
+            folderItem.isMyListItemDropTarget = false;
+        }
+
+        private void folderListViewItem_DragOver(object sender, DragEventArgs e)
+        {
+            folderListViewItem_DragEnter(sender, e);
+        }
+
+        private void folderListViewItem_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(FolderItem)))
+                return;
+
+            if (e.Data.GetDataPresent(typeof(MyListItem)))
+            {
+                var lvi = sender as ListViewItem;
+                var folderItem = lvi.DataContext as FolderItem;
+                if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                    MainWindow.instance.copySelectedMyListItem(folderItem);
+                else
+                    MainWindow.instance.moveSelectedMyListItem(folderItem);
+
+                folderItem.isMyListItemDropTarget = false;
+            }
+        }
+
+        #endregion
+
+        #region ■■■■■ コンテキストメニュー
+
         FolderItem _cotextMenuFolderItem;
+
+        private FolderItem getAnchorFolderItem(ContextMenu menu)
+        {
+            ListViewItem listViewItem = menu.PlacementTarget as ListViewItem;
+            FolderItem folderItem = listViewItem?.Content as FolderItem;
+            return folderItem;
+        }
 
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
@@ -96,6 +163,7 @@ namespace LocalNicoMyList
             folderItem.showedContextMenu = false;
             _cotextMenuFolderItem = null;
         }
+
         private void addFolder_Click(object sender, RoutedEventArgs e)
         {
             string baseName = "新しいフォルダー";
@@ -124,13 +192,6 @@ namespace LocalNicoMyList
                 }
                 startEditFolderListItem(folderItem);
             }));
-        }
-
-        private FolderItem getAnchorFolderItem(ContextMenu menu)
-        {
-            ListViewItem listViewItem = menu.PlacementTarget as ListViewItem;
-            FolderItem folderItem = listViewItem?.Content as FolderItem;
-            return folderItem;
         }
 
         private void removeFolder_Click(object sender, RoutedEventArgs e)
@@ -184,6 +245,10 @@ namespace LocalNicoMyList
 
             startEditFolderListItem(this.getAnchorFolderItem(menu));
         }
+
+#endregion
+
+#region ■■■■■ 名前変更用 TextBox
 
         FolderItem _editingFolderItem;
         TextBox _folderListTextBox;
@@ -271,6 +336,7 @@ namespace LocalNicoMyList
             }
         }
 
+#endregion
 
     }
 }

@@ -603,7 +603,28 @@ namespace LocalNicoMyList
             folderView._selectedFolderItem.count = this.myListView.myListItemSource.Count;
         }
 
-}
+        public void moveSelectedMyListItem(FolderItem folderItem)
+        {
+            this.copySelectedMyListItem(folderItem);
+
+            this.myListView.removeSelectedMyListItem();
+        }
+
+        public void copySelectedMyListItem(FolderItem folderItem)
+        {
+            var myListItems = this.myListView._videoListView.SelectedItems;
+            // 追加されていないものだけを列挙
+            var myListItems2 = myListItems.Cast<MyListItem>().Where((item) => {
+                var videoId = item.videoId;
+                return !_dbAccessor.isExistMyListItem(videoId, folderItem.id);
+            });
+            // DBに追加
+            _dbAccessor.addMyListItems(myListItems2, folderItem.id);
+            // フォルダ内アイテム数の表示を更新
+            folderItem.count = _dbAccessor.getMyListCount(folderItem.id);
+        }
+
+    }
 
     public static class EnumerableExtensions
     {

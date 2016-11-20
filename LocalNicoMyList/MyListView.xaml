@@ -172,6 +172,9 @@
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
                     <EventSetter Event="MouseDoubleClick" Handler="MyListListViewItem_MouseDoubleClick" />
+                    <EventSetter Event="PreviewMouseDown" Handler="MyListListViewItem_PreviewMouseDown" />
+                    <EventSetter Event="PreviewMouseMove" Handler="MyListListViewItem_PreviewMouseMove" />
+                    <EventSetter Event="PreviewMouseUp" Handler="MyListListViewItem_PreviewMouseUp" />
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
                 </Style>
             </ListView.ItemContainerStyle>

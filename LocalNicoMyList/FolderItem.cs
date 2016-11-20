@@ -58,6 +58,18 @@ namespace LocalNicoMyList
             }
         }
 
+        private bool _isMyListItemDropTarget;
+        public bool isMyListItemDropTarget
+        {
+            get { return _isMyListItemDropTarget; }
+            set
+            {
+                _isMyListItemDropTarget = value;
+                OnPropertyChanged("isMyListItemDropTarget");
+            }
+        }
+
+
         public FolderItem(FolderRecord folderRecord, int count)
         {
             this.id = folderRecord.id;

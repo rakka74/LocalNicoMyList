@@ -190,11 +190,99 @@ namespace LocalNicoMyList
             }
         }
 
+        Point? _mouseDownPt = null;
+        DragDropKeyStates _keyStateOnPreviewMouseDown;
+
+        private void MyListListViewItem_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                _mouseDownPt = e.GetPosition(_videoListView);
+
+                // 選択されているアイテムのpressで選択されてしまうと複数アイテムのドラッグができないので選択されるのを抑制
+                bool multiSelect = _videoListView.SelectedItems.Count > 1;
+                _keyStateOnPreviewMouseDown = 0;
+                _keyStateOnPreviewMouseDown |= (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) ? DragDropKeyStates.ControlKey : 0;
+                _keyStateOnPreviewMouseDown |= (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) ? DragDropKeyStates.ShiftKey : 0;
+                ListViewItem lvi = sender as ListViewItem;
+                MyListItem myListItem = lvi?.DataContext as MyListItem;
+                // Shiftが押されている場合は抑制しない
+                if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ShiftKey))
+                    return;
+                // Ctrlが押されている場合はpressで選択状態変更を抑制
+                if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ControlKey))
+                    e.Handled = true;
+                // Ctrl,Shiftが押されていない場合、複数選択されていて選択されているアイテムがpressされる場合は抑制
+                if (multiSelect && _videoListView.SelectedItems.Contains(myListItem))
+                {
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void MyListListViewItem_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed || !_mouseDownPt.HasValue)
+            {
+                return;
+            }
+            var point = e.GetPosition(_videoListView);
+            if (this.checkDistance(point, _mouseDownPt.Value))
+            {
+                ListViewItem lvi = sender as ListViewItem;
+                MyListItem myListItem = lvi?.DataContext as MyListItem;
+                DragDrop.DoDragDrop(lvi, myListItem, DragDropEffects.All);
+                _mouseDownPt = null;
+                e.Handled = true;
+            }
+        }
+
+        private void MyListListViewItem_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            _mouseDownPt = null;
+
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                // Shiftが押されている場合は抑制しなかったので何もしない
+                if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ShiftKey))
+                    return;
+
+                // Ctrlが押されている場合は抑制したので、ここで選択状態を変更する
+                ListViewItem lvi = sender as ListViewItem;
+                MyListItem myListItem = lvi?.DataContext as MyListItem;
+                if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ControlKey))
+                {
+                    if (_videoListView.SelectedItems.Contains(myListItem))
+                        _videoListView.SelectedItems.Remove(myListItem);
+                    else
+                        _videoListView.SelectedItems.Add(myListItem);
+                }
+                else
+                {
+                    // Ctrl,Shiftが押されていない場合は抑制したので、ここで選択する
+                    _videoListView.SelectedItems.Clear();
+                    _videoListView.SelectedItems.Add(myListItem);
+                }
+
+            }
+        }
+
+        private bool checkDistance(Point x, Point y)
+        {
+            return Math.Abs(x.X - y.X) >= SystemParameters.MinimumHorizontalDragDistance ||
+                Math.Abs(x.Y - y.Y) >= SystemParameters.MinimumVerticalDragDistance;
+        }
+
         #endregion
 
         #region ■■■■■ マイリスト一覧、コンテキストメニュー
 
         private void removeMyList_Click(object sender, RoutedEventArgs e)
+        {
+            this.removeSelectedMyListItem();
+        }
+
+        public void removeSelectedMyListItem()
         {
             var selecteedItems = _videoListView.SelectedItems.Cast<MyListItem>();
             var selectedIndices = selecteedItems.Select(_ => _myListItemSource.IndexOf(_)).OrderByDescending(_ => _);
@@ -208,7 +296,6 @@ namespace LocalNicoMyList
 
             MainWindow.instance.removedMyListItems(removedItems);
         }
-
 
         #endregion
 
