@@ -161,8 +161,9 @@
             </StackPanel>
         </Grid>
         <!-- マイリスト一覧 -->
-        <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True" DragEnter="_videoListView_DragEnter" Drop="_videoListView_Drop"
-                          VirtualizingPanel.ScrollUnit="Pixel" MouseLeftButtonDown="videoListView_MouseLeftButtonDown" MouseRightButtonDown="videoListView_MouseRightButtonDown">
+        <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" 
+                        AllowDrop="True" DragEnter="_videoListView_DragEnter" DragOver="_videoListView_DragOver" Drop="_videoListView_Drop"
+                        VirtualizingPanel.ScrollUnit="Pixel" MouseLeftButtonDown="videoListView_MouseLeftButtonDown" MouseRightButtonDown="videoListView_MouseRightButtonDown" >
             <ListView.Resources>
                 <ContextMenu x:Key="ItemContextMenu">
                     <MenuItem Header="削除" Click="removeMyList_Click" />

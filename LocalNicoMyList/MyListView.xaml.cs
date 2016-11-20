@@ -118,7 +118,7 @@ namespace LocalNicoMyList
             _myListItemCVS.IsLiveSortingRequested = false;
         }
 
-        #region マイリスト一覧
+        #region ■■■■■ マイリスト一覧
 
         private void videoListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -138,6 +138,25 @@ namespace LocalNicoMyList
             {
                 e.Effects = DragDropEffects.Copy;
             }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void _videoListView_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("UniformResourceLocator") ||
+                e.Data.GetDataPresent("UniformResourceLocatorW"))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
         }
 
         private async void _videoListView_Drop(object sender, DragEventArgs e)
@@ -159,7 +178,7 @@ namespace LocalNicoMyList
 
         #endregion
 
-        #region マイリスト一覧 ListViewItem
+        #region ■■■■■ マイリスト一覧 ListViewItem
 
         private void MyListListViewItem_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -173,7 +192,7 @@ namespace LocalNicoMyList
 
         #endregion
 
-        #region マイリスト一覧、コンテキストメニュー
+        #region ■■■■■ マイリスト一覧、コンテキストメニュー
 
         private void removeMyList_Click(object sender, RoutedEventArgs e)
         {
@@ -193,7 +212,7 @@ namespace LocalNicoMyList
 
         #endregion
 
-        #region ソート関連
+        #region ■■■■■ ソート関連
 
         private void sortCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -332,7 +351,7 @@ namespace LocalNicoMyList
 
         #endregion
 
-        #region タイトルフィルター
+        #region ■■■■■ タイトルフィルター
 
         private void titleFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
