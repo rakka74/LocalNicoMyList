@@ -95,12 +95,9 @@ namespace LocalNicoMyList
     /// </summary>
     public partial class MainWindow : Window
     {
-        ObservableCollection<MyListItem> _myListItemSource;
         string _cookieHeader;
         NicoApi _nicoApi;
         public DBAccessor _dbAccessor { get; private set; }
-        CollectionViewSource _myListItemCVS;
-        public ObservableCollection<SortItem> _sortCBItems;
 
         Task _getflvTask;
         CancellationTokenSource _getflvCTS;
@@ -144,41 +141,8 @@ namespace LocalNicoMyList
                 _isCheckedGetflv = value;
                 OnPropertyChanged("isCheckedGetflv");
             }
-
-            private Visibility _filterOnVisibility = Visibility.Visible;
-            public Visibility filterOnVisibility
-            {
-                get { return _filterOnVisibility; }
-                set
-                {
-                    _filterOnVisibility = value;
-                    OnPropertyChanged("filterOnVisibility");
-                }
-            }
-
-            private Visibility _filterOffVisibility = Visibility.Collapsed;
-            public Visibility filterOffVisibility
-            {
-                get { return _filterOffVisibility; }
-                set
-                {
-                    _filterOffVisibility = value;
-                    OnPropertyChanged("filterOffVisibility");
-                }
-            }
-
-            private string _titleFilterText = "";
-            public string titleFilterText
-            {
-                get { return _titleFilterText; }
-                set
-                {
-                    _titleFilterText = value;
-                    OnPropertyChanged("titleFilterText");
-                }
-            }
-
         }
+
 
         public static MainWindow instance;
 
@@ -218,33 +182,7 @@ namespace LocalNicoMyList
                 folderView._folderListItemSource.Add(new FolderItem(folderRecord, count));
             }
 
-            // マイリスト一覧初期化
-            _myListItemCVS = new CollectionViewSource();
-            _myListItemCVS.Source = _myListItemSource;
-            _myListItemCVS.Filter += titleFilter;
-            _videoListView.DataContext = _myListItemCVS;
-
-            // コンボボックス初期化
-            _sortCBItems = new ObservableCollection<SortItem>();
-            _sortCBItems.Add(new SortItem("登録が新しい順", SortKind.CreateTimeDescend));
-            _sortCBItems.Add(new SortItem("登録が古い順", SortKind.CreateTimeAscend));
-            _sortCBItems.Add(new SortItem("タイトル昇順", SortKind.TitleAscend));
-            _sortCBItems.Add(new SortItem("タイトル降順", SortKind.TitleDescend));
-            _sortCBItems.Add(new SortItem("投稿が新しい順", SortKind.PostTimeDescend));
-            _sortCBItems.Add(new SortItem("投稿が古い順", SortKind.PostTimeAscend));
-            _sortCBItems.Add(new SortItem("再生が多い順", SortKind.ViewCountDescend));
-            _sortCBItems.Add(new SortItem("再生が少ない順", SortKind.ViewCountAscend));
-            _sortCBItems.Add(new SortItem("コメントが新しい順", SortKind.LatestCommentTimeDescend));
-            _sortCBItems.Add(new SortItem("コメントが古い順", SortKind.LatestCommentTimeAscend));
-            _sortCBItems.Add(new SortItem("コメントが多い順", SortKind.CommentCountDescend));
-            _sortCBItems.Add(new SortItem("コメントが少ない順", SortKind.CommentCountAscend));
-            _sortCBItems.Add(new SortItem("マイリスト登録が多い順", SortKind.MyListCountDescend));
-            _sortCBItems.Add(new SortItem("マイリスト登録が少ない順", SortKind.MyListCountAscend));
-            _sortCBItems.Add(new SortItem("時間が長い順", SortKind.LengthCountDescend));
-            _sortCBItems.Add(new SortItem("時間が短い順", SortKind.LengthCountAscend));
-
-            this.sortCB.DataContext = _sortCBItems;
-
+            // ソートCB、初期値復元
             SortKind sortKind;
             try
             {
@@ -254,7 +192,7 @@ namespace LocalNicoMyList
             {
                 sortKind = SortKind.CreateTimeDescend;
             }
-            this.sortCB.SelectedValue = sortKind;
+            this.myListView.sortCB.SelectedValue = sortKind;
 
             _viewModel = new ViewModel(this);
             this.DataContext = _viewModel;
@@ -300,7 +238,7 @@ namespace LocalNicoMyList
             Properties.Settings.Default.MainWindow_Height = Height;
             Properties.Settings.Default.Folder_Width = folderView._folderListView.ActualWidth;
             Properties.Settings.Default.LastSelectedFolderId = folderView._selectedFolderItem.id;
-            Properties.Settings.Default.LastSelectedSortKind = Enum.GetName(typeof(SortKind), (SortKind)sortCB.SelectedValue);
+            Properties.Settings.Default.LastSelectedSortKind = Enum.GetName(typeof(SortKind), (SortKind)this.myListView.sortCB.SelectedValue);
             Properties.Settings.Default.IsCheckedGetflv = _viewModel.isCheckedGetflv;
 
             // ファイルに保存
@@ -339,89 +277,6 @@ namespace LocalNicoMyList
                 }
             }
             return false;
-        }
-
-
-        private void _videoListView_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent("UniformResourceLocator") ||
-                e.Data.GetDataPresent("UniformResourceLocatorW"))
-            {
-                e.Effects = DragDropEffects.Copy;
-            }
-        }
-
-        private async void _videoListView_Drop(object sender, DragEventArgs e)
-        {
-            string uri = e.Data.GetData(DataFormats.Text)?.ToString();
-            Console.WriteLine(uri);
-            var match = Regex.Match(uri, @"watch/(sm[0-9]+)");
-            if (match.Success)
-            {
-                string videoId = match.Groups[1].Value;
-                ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                DateTime? latestCommentTime = null;
-                var item = MyListItem.from(res, latestCommentTime, DateTime.Now);
-                if (null != item)
-                {
-                    if (!_dbAccessor.isExistMyListItem(videoId, folderView._selectedFolderItem.id))
-                    {
-                        _myListItemSource.Add(item);
-                        _dbAccessor.addMyListItem(item, folderView._selectedFolderItem.id);
-                        GetflvInfoRecord getflvInfo = _dbAccessor.getGetflvInfo(videoId);
-                        if (null == getflvInfo)
-                        {
-                            _dbAccessor.addEmptyGetflvInfo(videoId);
-                            _getflvQueue.Enqueue(videoId);
-                        }
-                        else
-                        {
-                            item.setGetflv(getflvInfo);
-                        }
-                        folderView._selectedFolderItem.count = _myListItemSource.Count;
-                    }
-                }
-            }
-            match = Regex.Match(uri, @"mylist/[0-9]+");
-            if (match.Success)
-            {
-                var hc = new HttpClient();
-                string ret = await hc.GetStringAsync("http://www.nicovideo.jp/" + match.Value);
-                match = Regex.Match(ret, @"Mylist.preload\([0-9]+,(.*?)\);");
-                if (match.Success)
-                {
-                    var jsonStr = match.Groups[1].Value;
-                    try
-                    {
-                        dynamic json = DynamicJson.Parse(jsonStr);
-
-                        var progressWindow = new ProgressWindow();
-                        var progress = new Progress<int>(value =>
-                        {
-                            progressWindow.ProgressBar.Value = value;
-                        });
-
-                        var cts = new CancellationTokenSource();
-                        progressWindow.Closed += (_, __) => cts.Cancel();
-
-                        var jsonItems = (dynamic[])json;
-                        var jsonItems2 = jsonItems.Where((item) => {
-                            var videoId = item["item_data"]["video_id"];
-                            return !_dbAccessor.isExistMyListItem(videoId, folderView._selectedFolderItem.id);
-                        });
-
-
-                        progressWindow.ProgressBar.Maximum = (double)jsonItems2.Count();
-                        var task = importMyListAsync(jsonItems2, progressWindow, cts.Token, progress);
-                        progressWindow.ShowDialog();
-                        await task;
-                    }
-                    catch (Exception exp)
-                    {
-                        Console.WriteLine(exp);
-                    }
-                }
-            }
         }
 
         // jsonに含まれるマイリスト情報をカレントフォルダに追加。
@@ -465,10 +320,9 @@ namespace LocalNicoMyList
                     }
                 }
                 // ビューモデルに追加
-                List<MyListItem> list = _myListItemSource.ToList();
+                List<MyListItem> list = this.myListView.myListItemSource.ToList();
                 list.AddRange(myListItems);
-                _myListItemSource = new ObservableCollection<MyListItem>(list);
-                _myListItemCVS.Source = _myListItemSource;
+                this.myListView.myListItemSource = new ObservableCollection<MyListItem>(list);
 
                 folderView._selectedFolderItem.count = list.Count;
             }
@@ -482,11 +336,8 @@ namespace LocalNicoMyList
             }
         }
 
-        private async void refreshButton_Click(object sender, RoutedEventArgs e)
+        public async Task refreshCurrentFolderInfo()
         {
-            if (_myListItemSource.Count == 0)
-                return;
-
             var progressWindow = new ProgressWindow();
             var progress = new Progress<int>(value =>
             {
@@ -529,24 +380,23 @@ namespace LocalNicoMyList
                         }
                     }
 
-                    MyListItem myListItem = _myListItemSource.First(_ => _.videoId.Equals(videoId));
+                    MyListItem myListItem = this.myListView.myListItemSource.First(_ => _.videoId.Equals(videoId));
                     myListItem.update(res, latestCommentTime);
 
                     Interlocked.Add(ref count, 1);
                     progress.Report(count);
                 };
 
-                List<MyListItem> myListItems = _myListItemSource.ToList();
+                List<MyListItem> myListItems = this.myListView.myListItemSource.ToList();
                 progressWindow.ProgressBar.Maximum = myListItems.Count;
 
                 await myListItems.ForEachAsync(action, 10, token);
 
                 // DBを更新
-                _dbAccessor.updateMyListItems(_myListItemSource, folderView._selectedFolderItem.id);
+                _dbAccessor.updateMyListItems(this.myListView.myListItemSource, folderView._selectedFolderItem.id);
 
                 // これをしないと更新後の値でソートされない
-                _myListItemCVS.IsLiveSortingRequested = true;
-                _myListItemCVS.IsLiveSortingRequested = false;
+                myListView.liveSortingRequest();
             }
             catch (Exception e)
             {
@@ -601,7 +451,7 @@ namespace LocalNicoMyList
                                 if (null != threadId && null != messageServerUrl)
                                 {
                                     _dbAccessor.updateGetflvInfo(videoId, threadId, messageServerUrl);
-                                    _myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
+                                    this.myListView.myListItemSource.FirstOrDefault((_) => { return _.videoId.Equals(videoId); })?.setGetflv(threadId, messageServerUrl);
                                     _getflvQueue.TryDequeue(out videoId);
                                     break;
                                 }
@@ -647,161 +497,16 @@ namespace LocalNicoMyList
             }
         }
 
-        private void sortCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            this.setSortKind((SortKind)((ComboBox)sender).SelectedValue);
-        }
-
-
-        private void sortCB_DropDownClosed(object sender, EventArgs e)
-        {
-            FocusManager.SetFocusedElement(FocusManager.GetFocusScope(_videoListView), _videoListView);
-        }
-
-        public void setSortKind(SortKind sortKind)
-        {
-            _myListItemCVS.SortDescriptions.Clear();
-
-            SortDescription sortDescription = new SortDescription();
-            switch (sortKind)
-            {
-                case SortKind.CreateTimeDescend: // 登録が新しい順
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "createTime",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.CreateTimeAscend: // 登録が古い順
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "createTime",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.TitleAscend: // タイトル昇順
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "title",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.TitleDescend: // タイトル降順
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "title",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.PostTimeDescend: // 投稿が新しい順
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "firstRetrieve",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.PostTimeAscend: // 投稿が古い順
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "firstRetrieve",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.ViewCountDescend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "viewCounter",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.ViewCountAscend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "viewCounter",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.LatestCommentTimeDescend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "latestCommentTime",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.LatestCommentTimeAscend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "latestCommentTime",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.CommentCountDescend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "commentNum",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.CommentCountAscend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "commentNum",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.MyListCountDescend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "mylistCounter",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.MyListCountAscend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "mylistCounter",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-                case SortKind.LengthCountDescend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "length",
-                        Direction = ListSortDirection.Descending
-                    };
-                    break;
-                case SortKind.LengthCountAscend:
-                    sortDescription = new SortDescription
-                    {
-                        PropertyName = "length",
-                        Direction = ListSortDirection.Ascending
-                    };
-                    break;
-            }
-
-            _myListItemCVS.SortDescriptions.Add(sortDescription);
-        }
-
-        private void MyListListViewItem_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            ListViewItem lvi = sender as ListViewItem;
-            MyListItem myListItem = lvi?.DataContext as MyListItem;
-            if (null != myListItem)
-            {
-                Process.Start(string.Format("http://www.nicovideo.jp/watch/{0}", myListItem.videoId));
-            }
-        }
-
         public void folderListView_SelectionChanged(FolderItem item)
         {
             // DBから情報を取得して動画一覧の内容を更新
-            _myListItemSource = new ObservableCollection<MyListItem>();
+            var newSrc = new ObservableCollection<MyListItem>();
             foreach (var record in _dbAccessor.getMyListItem(item.id))
             {
-                _myListItemSource.Add(new MyListItem(record));
+                newSrc.Add(new MyListItem(record));
             }
 
-            _myListItemCVS.Source = _myListItemSource;
+            this.myListView.myListItemSource = newSrc;
         }
 
         public void removedFolderItem(FolderItem folderItem)
@@ -823,72 +528,82 @@ namespace LocalNicoMyList
             }
         }
 
-        private void videoListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        public async Task nicoVideoDroped(string videoId)
         {
-            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
-            _videoListView.Focus();
-        }
-        private void videoListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
-            _videoListView.Focus();
+            ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
+            DateTime? latestCommentTime = null;
+            var item = MyListItem.from(res, latestCommentTime, DateTime.Now);
+            if (null != item)
+            {
+                if (!_dbAccessor.isExistMyListItem(videoId, folderView._selectedFolderItem.id))
+                {
+                    this.myListView.myListItemSource.Add(item);
+                    _dbAccessor.addMyListItem(item, folderView._selectedFolderItem.id);
+                    GetflvInfoRecord getflvInfo = _dbAccessor.getGetflvInfo(videoId);
+                    if (null == getflvInfo)
+                    {
+                        _dbAccessor.addEmptyGetflvInfo(videoId);
+                        _getflvQueue.Enqueue(videoId);
+                    }
+                    else
+                    {
+                        item.setGetflv(getflvInfo);
+                    }
+                    folderView._selectedFolderItem.count = this.myListView.myListItemSource.Count;
+                }
+            }
         }
 
-        private void removeMyList_Click(object sender, RoutedEventArgs e)
+        public async Task nicoMyListDroped(string url)
         {
-            var selecteedItems = _videoListView.SelectedItems.Cast<MyListItem>();
-            var selectedIndices = selecteedItems.Select(_ => _myListItemSource.IndexOf(_)).OrderByDescending(_ => _);
-            foreach (var index in selectedIndices)
+            var hc = new HttpClient();
+            string ret = await hc.GetStringAsync(url);
+            var match = Regex.Match(ret, @"Mylist.preload\([0-9]+,(.*?)\);");
+            if (match.Success)
             {
-                MyListItem item = _myListItemSource.ElementAt(index);
-                _myListItemSource.RemoveAt(index);
+                var jsonStr = match.Groups[1].Value;
+                try
+                {
+                    dynamic json = DynamicJson.Parse(jsonStr);
+
+                    var progressWindow = new ProgressWindow();
+                    var progress = new Progress<int>(value =>
+                    {
+                        progressWindow.ProgressBar.Value = value;
+                    });
+
+                    var cts = new CancellationTokenSource();
+                    progressWindow.Closed += (_, __) => cts.Cancel();
+
+                    var jsonItems = (dynamic[])json;
+                    var jsonItems2 = jsonItems.Where((item) => {
+                        var videoId = item["item_data"]["video_id"];
+                        return !_dbAccessor.isExistMyListItem(videoId, folderView._selectedFolderItem.id);
+                    });
+
+
+                    progressWindow.ProgressBar.Maximum = (double)jsonItems2.Count();
+                    var task = importMyListAsync(jsonItems2, progressWindow, cts.Token, progress);
+                    progressWindow.ShowDialog();
+                    await task;
+                }
+                catch (Exception exp)
+                {
+                    Console.WriteLine(exp);
+                }
+            }
+        }
+
+        public void removedMyListItems(List<MyListItem> removedItems)
+        {
+            foreach (var item in removedItems)
+            {
                 _dbAccessor.deleteMyListItem(item.videoId, folderView._selectedFolderItem.id);
             }
-            folderView._selectedFolderItem.count = _myListItemSource.Count;
+            folderView._selectedFolderItem.count = this.myListView.myListItemSource.Count;
         }
 
-        private void titleFilter_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox targetTextBox = (TextBox)sender;
-
-            if (targetTextBox.Text == "")
-            {
-                _viewModel.filterOnVisibility = Visibility.Visible;
-                _viewModel.filterOffVisibility = Visibility.Collapsed;
-            }
-            else
-            {
-                _viewModel.filterOffVisibility = Visibility.Visible;
-                _viewModel.filterOnVisibility = Visibility.Collapsed;
-            }
-            _myListItemCVS.IsLiveFilteringRequested = true;
-            _myListItemCVS.IsLiveFilteringRequested = false;
-        }
-
-        private void titleFilter(object sender, FilterEventArgs e)
-        {
-            MyListItem item = e.Item as MyListItem;
-            if (item != null)
-            {
-                // カタカナ、ひらがな、全角、半角、大文字、小文字を区別なく比較
-                CompareInfo ci = CultureInfo.CurrentCulture.CompareInfo;
-                int index = ci.IndexOf(item.title, _viewModel.titleFilterText, CompareOptions.IgnoreKanaType | CompareOptions.IgnoreCase | CompareOptions.IgnoreWidth);
-                if (0 <= index)
-                {
-                    e.Accepted = true;
-                }
-                else
-                {
-                    e.Accepted = false;
-                }
-            }
-        }
-
-        private void filterOff_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            _viewModel.titleFilterText = "";
-        }
-    }
+}
 
     public static class EnumerableExtensions
     {
