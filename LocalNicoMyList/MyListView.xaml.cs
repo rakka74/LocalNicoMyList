@@ -191,10 +191,12 @@ namespace LocalNicoMyList
         }
 
         Point? _mouseDownPt = null;
+        bool _preventSelectionChangeOnLeftMouseDown;
         DragDropKeyStates _keyStateOnPreviewMouseDown;
 
         private void MyListListViewItem_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            _preventSelectionChangeOnLeftMouseDown = false;
             if (e.ChangedButton == MouseButton.Left)
             {
                 _mouseDownPt = e.GetPosition(_videoListView);
@@ -211,10 +213,14 @@ namespace LocalNicoMyList
                     return;
                 // Ctrlが押されている場合はpressで選択状態変更を抑制
                 if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ControlKey))
-                    e.Handled = true;
-                // Ctrl,Shiftが押されていない場合、複数選択されていて選択されているアイテムがpressされる場合は抑制
-                if (multiSelect && _videoListView.SelectedItems.Contains(myListItem))
                 {
+                    _preventSelectionChangeOnLeftMouseDown = true;
+                    e.Handled = true;
+                }
+                // Ctrl,Shiftが押されていない場合、複数選択されていて選択されているアイテムがpressされる場合は抑制
+                else if (multiSelect && _videoListView.SelectedItems.Contains(myListItem))
+                {
+                    _preventSelectionChangeOnLeftMouseDown = true;
                     e.Handled = true;
                 }
             }
@@ -231,6 +237,17 @@ namespace LocalNicoMyList
             {
                 ListViewItem lvi = sender as ListViewItem;
                 MyListItem myListItem = lvi?.DataContext as MyListItem;
+
+                // Ctrlを押しながら未選択のアイテムをdownしてmoveした場合、downで選択状態の変更を抑制しているため
+                // downされたアイテムが選択状態にならないので、ここで選択状態にする。
+                if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ControlKey))
+                {
+                    if (!_videoListView.SelectedItems.Contains(myListItem))
+                        _videoListView.SelectedItems.Add(myListItem);
+                }
+
+                _preventSelectionChangeOnLeftMouseDown = false; // MouseUpで選択状態を変更しないように
+
                 DragDrop.DoDragDrop(lvi, myListItem, DragDropEffects.All);
                 _mouseDownPt = null;
                 e.Handled = true;
@@ -241,12 +258,8 @@ namespace LocalNicoMyList
         {
             _mouseDownPt = null;
 
-            if (e.ChangedButton == MouseButton.Left)
+            if (e.ChangedButton == MouseButton.Left && _preventSelectionChangeOnLeftMouseDown)
             {
-                // Shiftが押されている場合は抑制しなかったので何もしない
-                if (0 != (_keyStateOnPreviewMouseDown & DragDropKeyStates.ShiftKey))
-                    return;
-
                 // Ctrlが押されている場合は抑制したので、ここで選択状態を変更する
                 ListViewItem lvi = sender as ListViewItem;
                 MyListItem myListItem = lvi?.DataContext as MyListItem;
