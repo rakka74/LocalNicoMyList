@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,7 +16,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using WPF.JoshSmith.ServiceProviders.UI;
 
 namespace LocalNicoMyList
 {
@@ -24,9 +24,10 @@ namespace LocalNicoMyList
     /// </summary>
     public partial class FolderView : UserControl
     {
-        ListViewDragDropManager<FolderItem> _lvDDMan;
         public ObservableCollection<FolderItem> _folderListItemSource;
         public FolderItem _selectedFolderItem;
+
+        bool _preventDragFolder;
 
         public FolderView()
         {
@@ -38,16 +39,6 @@ namespace LocalNicoMyList
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            _lvDDMan = new ListViewDragDropManager<FolderItem>(_folderListView);
-            _lvDDMan.ProcessDrop += LvDDMan_ProcessDrop;
-
-        }
-
-        private void LvDDMan_ProcessDrop(object sender, ProcessDropEventArgs<FolderItem> e)
-        {
-            _folderListItemSource.Move(e.OldIndex, e.NewIndex);
-            // DBに保存
-            MainWindow.instance._dbAccessor.updateFolderOrderIdx(_folderListItemSource);
         }
 
         private void _folderListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -69,7 +60,52 @@ namespace LocalNicoMyList
             _folderListView.Focus();
         }
 
+        #region ■■■■■ フォルダ一覧 ListView
+
+        InsertionMarkAdorner _insertionMarkAdorner;
+
+        private void folderListView_PreviewDragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(FolderItem)))
+            {
+                var lvi = _folderListView.ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+
+                var draggedFolderItem = e.Data.GetData(typeof(FolderItem)) as FolderItem;
+                var tagetFolderItem = lvi.DataContext as FolderItem;
+
+                int draggedFolderIdx = _folderListItemSource.IndexOf(draggedFolderItem);
+                int targetFolderIdx = _folderListItemSource.IndexOf(tagetFolderItem);
+
+                if (draggedFolderIdx == targetFolderIdx)
+                    return;
+                _insertionMarkAdorner = new InsertionMarkAdorner(lvi, draggedFolderIdx < targetFolderIdx ? InsertionMarkAdorner.Edge.Bottom : InsertionMarkAdorner.Edge.Top);
+            }
+        }
+
+        private void folderListView_PreviewDragLeave(object sender, DragEventArgs e)
+        {
+            _insertionMarkAdorner?.Dispose();
+            _insertionMarkAdorner = null;
+        }
+
+        #endregion
+
         #region ■■■■■ フォルダ一覧 ListViewItem
+
+        Point? _mouseDownPt = null;
+        Point _mouseOffsetFromItem;
+
+        private void folderListViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!_preventDragFolder)
+            {
+                // マウスダウン時の座標を取得
+                _mouseDownPt = this.PointToScreen(e.GetPosition(this));
+
+                ListViewItem lvi = sender as ListViewItem;
+                _mouseOffsetFromItem = lvi.PointFromScreen(_mouseDownPt.Value);
+            }
+        }
 
         private void folderListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -78,22 +114,75 @@ namespace LocalNicoMyList
             e.Handled = true;
         }
 
+        DragAdorner _dragContentAdorner;
+
+        private void folderListViewItem_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed || !_mouseDownPt.HasValue)
+            {
+                return;
+            }
+            var point = this.PointToScreen(e.GetPosition(this));
+            if (this.checkDistance(point, _mouseDownPt.Value))
+            {
+                ListViewItem lvi = sender as ListViewItem;
+                _dragContentAdorner = new DragAdorner(_folderListView, lvi, 0.7, _mouseOffsetFromItem);
+
+                FolderItem folderItem = lvi?.DataContext as FolderItem;
+                DragDrop.DoDragDrop(lvi, folderItem, DragDropEffects.Move);
+
+                _dragContentAdorner.Dispose();
+                _dragContentAdorner = null;
+                _insertionMarkAdorner?.Dispose();
+                _insertionMarkAdorner = null;
+
+                _mouseDownPt = null;
+
+                e.Handled = true;
+            }
+        }
+
+        private void folderListViewItem_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
+        {
+            if (_dragContentAdorner != null)
+            {
+                var p = CursorInfo.GetNowPosition(this);
+                var loc = this.PointFromScreen(_folderListView.PointToScreen(new Point(0, 0)));
+                _dragContentAdorner.LeftOffset = p.X - loc.X;
+                _dragContentAdorner.TopOffset = p.Y - loc.Y;
+            }
+        }
+
+        private bool checkDistance(Point x, Point y)
+        {
+            return Math.Abs(x.X - y.X) >= SystemParameters.MinimumHorizontalDragDistance ||
+                Math.Abs(x.Y - y.Y) >= SystemParameters.MinimumVerticalDragDistance;
+        }
+
         private void folderListViewItem_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(typeof(FolderItem)))
-                return;
-
             var lvi = sender as ListViewItem;
-            var folderItem = lvi.DataContext as FolderItem;
 
-            if (folderItem.id != _selectedFolderItem.id && e.Data.GetDataPresent(typeof(MyListItem)))
+            if (e.Data.GetDataPresent(typeof(FolderItem)))
             {
-                if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
-                    e.Effects = DragDropEffects.Copy;
+            }
+            else if (e.Data.GetDataPresent(typeof(MyListItem)))
+            {
+                var folderItem = lvi.DataContext as FolderItem;
+
+                if (folderItem.id != _selectedFolderItem.id)
+                {
+                    if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                        e.Effects = DragDropEffects.Copy;
+                    else
+                        e.Effects = DragDropEffects.Move;
+                    // ドロップ先のフォルダのListViewItemの色を変更
+                    folderItem.isMyListItemDropTarget = true;
+                }
                 else
-                    e.Effects = DragDropEffects.Move;
-                // ドロップ先のフォルダのListViewItemの色を変更
-                folderItem.isMyListItemDropTarget = true;
+                {
+                    e.Effects = DragDropEffects.None;
+                }
             }
             else
             {
@@ -117,9 +206,22 @@ namespace LocalNicoMyList
         private void folderListViewItem_Drop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(typeof(FolderItem)))
-                return;
+            {
+                var lvi = sender as ListViewItem;
+                var targetFolderItem = lvi.DataContext as FolderItem;
+                int newIndex = _folderListItemSource.IndexOf(targetFolderItem);
 
-            if (e.Data.GetDataPresent(typeof(MyListItem)))
+                var draggedFolderItem = e.Data.GetData(typeof(FolderItem)) as FolderItem;
+                int oldIndex = _folderListItemSource.IndexOf(draggedFolderItem);
+
+                if (oldIndex != newIndex)
+                {
+                    _folderListItemSource.Move(oldIndex, newIndex);
+                    // DBに保存
+                    MainWindow.instance.folderReordered();
+                }
+            }
+            else if (e.Data.GetDataPresent(typeof(MyListItem)))
             {
                 var lvi = sender as ListViewItem;
                 var folderItem = lvi.DataContext as FolderItem;
@@ -248,7 +350,7 @@ namespace LocalNicoMyList
 
 #endregion
 
-#region ■■■■■ 名前変更用 TextBox
+        #region ■■■■■ 名前変更用 TextBox
 
         FolderItem _editingFolderItem;
         TextBox _folderListTextBox;
@@ -272,12 +374,12 @@ namespace LocalNicoMyList
             _editingFolderItem = folderItem;
             _folderListTextBox = textBox;
 
-            _lvDDMan.ListView = null;
+            _preventDragFolder = true;
         }
 
         private void endEditFolderListItem(bool cancel = false)
         {
-            _lvDDMan.ListView = _folderListView;
+            _preventDragFolder = false;
 
             if (null == _editingFolderItem)
                 return;
@@ -336,7 +438,162 @@ namespace LocalNicoMyList
             }
         }
 
-#endregion
+        #endregion
+    }
 
+    class AdornerBase : Adorner, IDisposable
+    {
+        private AdornerLayer _adornerLayer;
+
+        public AdornerBase(UIElement adornedElement) : base(adornedElement)
+        {
+            _adornerLayer = AdornerLayer.GetAdornerLayer(adornedElement);
+            _adornerLayer.Add(this);
+
+            this.IsHitTestVisible = false;
+        }
+
+        public void Dispose()
+        {
+            _adornerLayer.Remove(this);
+        }
+    }
+
+
+    class InsertionMarkAdorner : AdornerBase
+    {
+        public enum Edge
+        {
+            Top,
+            Bottom
+        }
+
+        Edge _edge;
+
+        public InsertionMarkAdorner(UIElement adornedElement, Edge edge) : base(adornedElement)
+        {
+            _edge = edge;
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+            if (_edge == Edge.Top)
+                drawingContext.DrawLine(new Pen(Brushes.DodgerBlue, 5), new Point(0, 0), new Point(this.ActualWidth, 0));
+            else
+                drawingContext.DrawLine(new Pen(Brushes.DodgerBlue, 5), new Point(0, this.ActualHeight), new Point(this.ActualWidth, this.ActualHeight));
+        }
+    }
+
+    class DragAdorner : AdornerBase
+    {
+        protected UIElement _child;
+        protected double XCenter;
+        protected double YCenter;
+
+        public DragAdorner(UIElement owner) : base(owner) { }
+
+        public DragAdorner(UIElement owner, UIElement adornElement, double opacity, Point dragPos)
+            : base(owner)
+        {
+            var _brush = new VisualBrush(adornElement) { Opacity = opacity };
+            var b = VisualTreeHelper.GetDescendantBounds(adornElement);
+            var r = new Rectangle() { Width = b.Width, Height = b.Height };
+
+            XCenter = dragPos.X;// r.Width / 2;
+            YCenter = dragPos.Y;// r.Height / 2;
+
+            r.Fill = _brush;
+            _child = r;
+        }
+
+
+        private double _leftOffset;
+        public double LeftOffset
+        {
+            get { return _leftOffset; }
+            set
+            {
+                _leftOffset = value - XCenter;
+                UpdatePosition();
+            }
+        }
+
+        private double _topOffset;
+        public double TopOffset
+        {
+            get { return _topOffset; }
+            set
+            {
+                _topOffset = value - YCenter;
+                UpdatePosition();
+            }
+        }
+
+        private void UpdatePosition()
+        {
+            var adorner = this.Parent as AdornerLayer;
+            if (adorner != null)
+            {
+                adorner.Update(this.AdornedElement);
+            }
+        }
+
+        protected override Visual GetVisualChild(int index)
+        {
+            return _child;
+        }
+
+        protected override int VisualChildrenCount
+        {
+            get { return 1; }
+        }
+
+        protected override Size MeasureOverride(Size finalSize)
+        {
+            _child.Measure(finalSize);
+            return _child.DesiredSize;
+        }
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+
+            _child.Arrange(new Rect(_child.DesiredSize));
+            return finalSize;
+        }
+
+        public override GeneralTransform GetDesiredTransform(GeneralTransform transform)
+        {
+            var result = new GeneralTransformGroup();
+            result.Children.Add(base.GetDesiredTransform(transform));
+            result.Children.Add(new TranslateTransform(_leftOffset, _topOffset));
+            return result;
+        }
+    }
+
+    public static class CursorInfo
+    {
+        [DllImport("user32.dll")]
+        private static extern void GetCursorPos(out POINT pt);
+
+        [DllImport("user32.dll")]
+        private static extern int ScreenToClient(IntPtr hwnd, ref POINT pt);
+
+        private struct POINT
+        {
+            public UInt32 X;
+            public UInt32 Y;
+        }
+
+        public static Point GetNowPosition(Visual v)
+        {
+            POINT p;
+            GetCursorPos(out p);
+
+            var source = HwndSource.FromVisual(v) as HwndSource;
+            var hwnd = source.Handle;
+
+            ScreenToClient(hwnd, ref p);
+            return new Point(p.X, p.Y);
+        }
     }
 }

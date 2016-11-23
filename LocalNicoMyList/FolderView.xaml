@@ -142,7 +142,8 @@
     </UserControl.Resources>
     <Grid>
         <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single"
-                        MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown">
+                        MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown"
+                        PreviewDragEnter="folderListView_PreviewDragEnter" PreviewDragLeave="folderListView_PreviewDragLeave">
             <ListView.Resources>
                 <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
                     <MenuItem Header="追加" Click="addFolder_Click" />
@@ -152,12 +153,16 @@
             </ListView.Resources>
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="folderListViewItem_PreviewMouseLeftButtonDown"/>
                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="folderListViewItem_PreviewMouseRightButtonDown" />
+                    <EventSetter Event="PreviewMouseMove" Handler="folderListViewItem_PreviewMouseMove"/>
+                    <EventSetter Event="QueryContinueDrag" Handler="folderListViewItem_QueryContinueDrag"/>
                     <EventSetter Event="DragEnter" Handler="folderListViewItem_DragEnter" />
                     <EventSetter Event="DragLeave" Handler="folderListViewItem_DragLeave" />
                     <EventSetter Event="DragOver" Handler="folderListViewItem_DragOver" />
                     <EventSetter Event="Drop" Handler="folderListViewItem_Drop" />
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
+                    <Setter Property="AllowDrop" Value="True" />
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.ContextMenu>

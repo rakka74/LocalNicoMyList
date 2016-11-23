@@ -3,29 +3,18 @@ using LocalNicoMyList.nicoApi;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using SharpHeaderCookie;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
-using WPF.JoshSmith.ServiceProviders.UI;
 using static LocalNicoMyList.DBAccessor;
-using static LocalNicoMyList.nicoApi.NicoApi;
 
 namespace LocalNicoMyList
 {
@@ -97,7 +86,7 @@ namespace LocalNicoMyList
     {
         string _cookieHeader;
         NicoApi _nicoApi;
-        public DBAccessor _dbAccessor { get; private set; }
+        private DBAccessor _dbAccessor;
 
         Task _getflvTask;
         CancellationTokenSource _getflvCTS;
@@ -624,6 +613,10 @@ namespace LocalNicoMyList
             folderItem.count = _dbAccessor.getMyListCount(folderItem.id);
         }
 
+        public  void folderReordered()
+        {
+            MainWindow.instance._dbAccessor.updateFolderOrderIdx(this.folderView._folderListItemSource);
+        }
     }
 
     public static class EnumerableExtensions
