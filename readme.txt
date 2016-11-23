@@ -1,4 +1,4 @@
-LocalNicoMyList 1.0 (c) 2016 rakka
+LocalNicoMyList 1.30 (c) 2016 rakka
 https://github.com/rakka74/LocalNicoMyList
 
 Å° äTóv
