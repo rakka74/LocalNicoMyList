@@ -12,10 +12,10 @@ Windows 7 Home Premium SP1
 ・右クリックメニューからフォルダの追加、削除、名前の変更ができます。
 ・フォルダをドラッグ＆ドロップすることで並び順を変更できます。
 ● マイリスト一覧
-・動画のURL(`http://www.nicovideo.jp/watch/sm～`)をドラッグ＆ドロップ
-すると選択されているフォルダにマイリストが追加されます。
+・動画のURL(`http://www.nicovideo.jp/watch/sm～`)をブラウザから
+ドラッグ＆ドロップすると選択されているフォルダにマイリストが追加されます。
 ・マイリスト一覧にマイリストのURL(`http://www.nicovideo.jp/mylist/～`)を
-ドラッグ＆ドロップするとニコニコ動画のマイリストの動画がまとめて
+ブラウザからドラッグ＆ドロップするとニコニコ動画のマイリストの動画がまとめて
 マイリストに追加されます。
 ・マイリストをダブルクリックでブラウザで動画のページを開きます。
 ・マイリストを選択して右クリックメニューからマイリストを削除できます。
@@ -42,7 +42,6 @@ Microsoft Visual Studio Community 2015
 
 ■ 使用ライブラリ
 ・DynamicJson (c) neuecc
-・ListViewDragDropManager (c) Josh Smith, Anthony Perez
 ・SharpHeaderCookie (c) 悠悠閑閑前途遼遠
 ・SQLite (c) SQLite Development Team
 
