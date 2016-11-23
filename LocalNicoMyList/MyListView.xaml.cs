@@ -136,7 +136,7 @@ namespace LocalNicoMyList
             if (e.Data.GetDataPresent("UniformResourceLocator") ||
                 e.Data.GetDataPresent("UniformResourceLocatorW"))
             {
-                e.Effects = DragDropEffects.Copy;
+                e.Effects = DragDropEffects.Link;
             }
             else
             {
@@ -147,16 +147,7 @@ namespace LocalNicoMyList
 
         private void _videoListView_DragOver(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent("UniformResourceLocator") ||
-                e.Data.GetDataPresent("UniformResourceLocatorW"))
-            {
-                e.Effects = DragDropEffects.Copy;
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-            e.Handled = true;
+            _videoListView_DragEnter(sender, e);
         }
 
         private async void _videoListView_Drop(object sender, DragEventArgs e)
