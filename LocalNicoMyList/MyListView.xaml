@@ -109,11 +109,11 @@
                     <!--<WebBrowser Height="50" local:BrowserBehavior.Html="{Binding HtmlToDisplay}" />-->
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="再生：" FontSize="12" />
-                        <TextBlock Text="{Binding viewCounter}" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding viewCounter, StringFormat={}{0:#\,0}}" FontSize="12" FontWeight="Bold"/>
                         <TextBlock Text="コメ：" FontSize="12"  Margin="15,0,0,0"/>
-                        <TextBlock Text="{Binding commentNum}" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding commentNum, StringFormat={}{0:#\,0}}" FontSize="12" FontWeight="Bold"/>
                         <TextBlock Text="マイ：" FontSize="12" Margin="15,0,0,0" />
-                        <TextBlock Text="{Binding mylistCounter}" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding mylistCounter, StringFormat={}{0:#\,0}}" FontSize="12" FontWeight="Bold"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="getflv：" FontSize="10" Foreground="Gray"/>
