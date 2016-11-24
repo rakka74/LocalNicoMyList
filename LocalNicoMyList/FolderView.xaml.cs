@@ -41,6 +41,8 @@ namespace LocalNicoMyList
         {
         }
 
+        #region ■■■■■ フォルダ一覧 ListView
+
         private void _folderListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             FolderItem item = e.AddedItems[0] as FolderItem;
@@ -60,7 +62,152 @@ namespace LocalNicoMyList
             _folderListView.Focus();
         }
 
-        #region ■■■■■ フォルダ一覧 ListView
+        Point? _mouseDownPt = null;
+        Point _mouseOffsetFromItem;
+
+        private void folderListView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+            if (null != lvi && !_preventDragFolder)
+            {
+                // マウスダウン時の座標を取得
+                _mouseDownPt = this.PointToScreen(e.GetPosition(this));
+
+                _mouseOffsetFromItem = lvi.PointFromScreen(_mouseDownPt.Value);
+            }
+        }
+
+        private void folderListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _folderListView.Focus();
+            // ハンドルすることで右クリックでアイテムが選択されなくなる
+            e.Handled = true;
+        }
+
+        DragAdorner _dragContentAdorner;
+
+        private void folderListView_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed || !_mouseDownPt.HasValue)
+            {
+                return;
+            }
+            var point = this.PointToScreen(e.GetPosition(this));
+            if (this.checkDistance(point, _mouseDownPt.Value))
+            {
+                var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+                _dragContentAdorner = new DragAdorner(_folderListView, lvi, 0.7, _mouseOffsetFromItem);
+
+                FolderItem folderItem = lvi?.DataContext as FolderItem;
+                DragDrop.DoDragDrop(lvi, folderItem, DragDropEffects.Move);
+
+                _dragContentAdorner.Dispose();
+                _dragContentAdorner = null;
+                _insertionMarkAdorner?.Dispose();
+                _insertionMarkAdorner = null;
+
+                _mouseDownPt = null;
+
+                e.Handled = true;
+            }
+        }
+
+        private bool checkDistance(Point x, Point y)
+        {
+            return Math.Abs(x.X - y.X) >= SystemParameters.MinimumHorizontalDragDistance ||
+                Math.Abs(x.Y - y.Y) >= SystemParameters.MinimumVerticalDragDistance;
+        }
+
+        private void folderListView_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
+        {
+            if (_dragContentAdorner != null)
+            {
+                var p = CursorInfo.GetNowPosition(this);
+                var loc = this.PointFromScreen(_folderListView.PointToScreen(new Point(0, 0)));
+                _dragContentAdorner.LeftOffset = p.X - loc.X;
+                _dragContentAdorner.TopOffset = p.Y - loc.Y;
+            }
+        }
+
+        private void folderListView_DragEnter(object sender, DragEventArgs e)
+        {
+            var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+
+            if (null == lvi)
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            else {
+                if (e.Data.GetDataPresent(typeof(FolderItem)))
+                {
+                }
+                else if (e.Data.GetDataPresent(typeof(MyListItem)))
+                {
+                    e.Effects = DragDropEffects.None;
+
+                    var folderItem = lvi.DataContext as FolderItem;
+
+                    if (folderItem.id != _selectedFolderItem.id)
+                    {
+                        if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                            e.Effects = DragDropEffects.Copy;
+                        else
+                            e.Effects = DragDropEffects.Move;
+                        // ドロップ先のフォルダのListViewItemの色を変更
+                        folderItem.isMyListItemDropTarget = true;
+                    }
+                }
+            }
+            e.Handled = true;
+        }
+
+        private void folderListView_DragOver(object sender, DragEventArgs e)
+        {
+            folderListView_DragEnter(sender, e);
+        }
+
+        private void folderListView_DragLeave(object sender, DragEventArgs e)
+        {
+            var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+            if (null != lvi)
+            {
+                var folderItem = lvi.DataContext as FolderItem;
+                folderItem.isMyListItemDropTarget = false;
+            }
+        }
+
+        private void folderListView_Drop(object sender, DragEventArgs e)
+        {
+            var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+            if (null == lvi)
+                return;
+
+            if (e.Data.GetDataPresent(typeof(FolderItem)))
+            {
+                var targetFolderItem = lvi.DataContext as FolderItem;
+                int newIndex = _folderListItemSource.IndexOf(targetFolderItem);
+
+                var draggedFolderItem = e.Data.GetData(typeof(FolderItem)) as FolderItem;
+                int oldIndex = _folderListItemSource.IndexOf(draggedFolderItem);
+
+                if (oldIndex != newIndex)
+                {
+                    _folderListItemSource.Move(oldIndex, newIndex);
+                    // DBに保存
+                    MainWindow.instance.folderReordered();
+                }
+            }
+            else if (e.Data.GetDataPresent(typeof(MyListItem)))
+            {
+                var folderItem = lvi.DataContext as FolderItem;
+                if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                    MainWindow.instance.copySelectedMyListItem(folderItem);
+                else
+                    MainWindow.instance.moveSelectedMyListItem(folderItem);
+
+                folderItem.isMyListItemDropTarget = false;
+            }
+        }
 
         InsertionMarkAdorner _insertionMarkAdorner;
 
@@ -86,152 +233,6 @@ namespace LocalNicoMyList
         {
             _insertionMarkAdorner?.Dispose();
             _insertionMarkAdorner = null;
-        }
-
-        #endregion
-
-        #region ■■■■■ フォルダ一覧 ListViewItem
-
-        Point? _mouseDownPt = null;
-        Point _mouseOffsetFromItem;
-
-        private void folderListViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!_preventDragFolder)
-            {
-                // マウスダウン時の座標を取得
-                _mouseDownPt = this.PointToScreen(e.GetPosition(this));
-
-                ListViewItem lvi = sender as ListViewItem;
-                _mouseOffsetFromItem = lvi.PointFromScreen(_mouseDownPt.Value);
-            }
-        }
-
-        private void folderListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            _folderListView.Focus();
-            // ハンドルすることで右クリックでアイテムが選択されなくなる
-            e.Handled = true;
-        }
-
-        DragAdorner _dragContentAdorner;
-
-        private void folderListViewItem_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton != MouseButtonState.Pressed || !_mouseDownPt.HasValue)
-            {
-                return;
-            }
-            var point = this.PointToScreen(e.GetPosition(this));
-            if (this.checkDistance(point, _mouseDownPt.Value))
-            {
-                ListViewItem lvi = sender as ListViewItem;
-                _dragContentAdorner = new DragAdorner(_folderListView, lvi, 0.7, _mouseOffsetFromItem);
-
-                FolderItem folderItem = lvi?.DataContext as FolderItem;
-                DragDrop.DoDragDrop(lvi, folderItem, DragDropEffects.Move);
-
-                _dragContentAdorner.Dispose();
-                _dragContentAdorner = null;
-                _insertionMarkAdorner?.Dispose();
-                _insertionMarkAdorner = null;
-
-                _mouseDownPt = null;
-
-                e.Handled = true;
-            }
-        }
-
-        private void folderListViewItem_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
-        {
-            if (_dragContentAdorner != null)
-            {
-                var p = CursorInfo.GetNowPosition(this);
-                var loc = this.PointFromScreen(_folderListView.PointToScreen(new Point(0, 0)));
-                _dragContentAdorner.LeftOffset = p.X - loc.X;
-                _dragContentAdorner.TopOffset = p.Y - loc.Y;
-            }
-        }
-
-        private bool checkDistance(Point x, Point y)
-        {
-            return Math.Abs(x.X - y.X) >= SystemParameters.MinimumHorizontalDragDistance ||
-                Math.Abs(x.Y - y.Y) >= SystemParameters.MinimumVerticalDragDistance;
-        }
-
-        private void folderListViewItem_DragEnter(object sender, DragEventArgs e)
-        {
-            var lvi = sender as ListViewItem;
-
-            if (e.Data.GetDataPresent(typeof(FolderItem)))
-            {
-            }
-            else if (e.Data.GetDataPresent(typeof(MyListItem)))
-            {
-                var folderItem = lvi.DataContext as FolderItem;
-
-                if (folderItem.id != _selectedFolderItem.id)
-                {
-                    if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
-                        e.Effects = DragDropEffects.Copy;
-                    else
-                        e.Effects = DragDropEffects.Move;
-                    // ドロップ先のフォルダのListViewItemの色を変更
-                    folderItem.isMyListItemDropTarget = true;
-                }
-                else
-                {
-                    e.Effects = DragDropEffects.None;
-                }
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-            e.Handled = true;
-        }
-
-        private void folderListViewItem_DragLeave(object sender, DragEventArgs e)
-        {
-            var lvi = sender as ListViewItem;
-            var folderItem = lvi.DataContext as FolderItem;
-            folderItem.isMyListItemDropTarget = false;
-        }
-
-        private void folderListViewItem_DragOver(object sender, DragEventArgs e)
-        {
-            folderListViewItem_DragEnter(sender, e);
-        }
-
-        private void folderListViewItem_Drop(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(typeof(FolderItem)))
-            {
-                var lvi = sender as ListViewItem;
-                var targetFolderItem = lvi.DataContext as FolderItem;
-                int newIndex = _folderListItemSource.IndexOf(targetFolderItem);
-
-                var draggedFolderItem = e.Data.GetData(typeof(FolderItem)) as FolderItem;
-                int oldIndex = _folderListItemSource.IndexOf(draggedFolderItem);
-
-                if (oldIndex != newIndex)
-                {
-                    _folderListItemSource.Move(oldIndex, newIndex);
-                    // DBに保存
-                    MainWindow.instance.folderReordered();
-                }
-            }
-            else if (e.Data.GetDataPresent(typeof(MyListItem)))
-            {
-                var lvi = sender as ListViewItem;
-                var folderItem = lvi.DataContext as FolderItem;
-                if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
-                    MainWindow.instance.copySelectedMyListItem(folderItem);
-                else
-                    MainWindow.instance.moveSelectedMyListItem(folderItem);
-
-                folderItem.isMyListItemDropTarget = false;
-            }
         }
 
         #endregion
@@ -348,7 +349,7 @@ namespace LocalNicoMyList
             startEditFolderListItem(this.getAnchorFolderItem(menu));
         }
 
-#endregion
+        #endregion
 
         #region ■■■■■ 名前変更用 TextBox
 
