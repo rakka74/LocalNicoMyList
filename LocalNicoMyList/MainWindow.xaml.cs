@@ -168,7 +168,7 @@ namespace LocalNicoMyList
             foreach (FolderRecord folderRecord in folderRecordList)
             {
                 int count = _dbAccessor.getMyListCount(folderRecord.id);
-                folderView._folderListItemSource.Add(new FolderItem(folderRecord, count));
+                folderView.folderLVItemsSourcee.Add(new FolderItem(folderRecord, count));
             }
 
             // ソートCB、初期値復元
@@ -177,7 +177,7 @@ namespace LocalNicoMyList
             {
                 sortKind = (SortKind)Enum.Parse(typeof(SortKind), Properties.Settings.Default.LastSelectedSortKind, true);
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 sortKind = SortKind.CreateTimeDescend;
             }
@@ -194,7 +194,7 @@ namespace LocalNicoMyList
 
             // 前回終了時のフォルダを選択
             long folderId = Properties.Settings.Default.LastSelectedFolderId;
-            var folderItem = folderView._folderListItemSource.FirstOrDefault(_ => { return _.id == folderId; });
+            var folderItem = folderView.folderLVItemsSourcee.FirstOrDefault(_ => { return _.id == folderId; });
             if (null != folderItem)
                 folderView._folderListView.SelectedItem = folderItem;
             else
@@ -363,7 +363,7 @@ namespace LocalNicoMyList
                                 latestCommentTime = item.firstRetrieve;
                             }
                         }
-                        catch(Exception e)
+                        catch(Exception)
                         {
                             latestCommentTime = null;
                         }
@@ -477,7 +477,7 @@ namespace LocalNicoMyList
                     await Task.Delay(1000, _getflvCTS.Token);
                 }
             }
-            catch(TaskCanceledException e)
+            catch(TaskCanceledException)
             {
             }
             catch(Exception e2)
@@ -508,7 +508,7 @@ namespace LocalNicoMyList
         {
             if (folderItem.id == -1)
             {
-                long folderId = _dbAccessor.addFolder(folderItem.name, folderView._folderListItemSource.Count);
+                long folderId = _dbAccessor.addFolder(folderItem.name, folderView.folderLVItemsSourcee.Count);
                 folderItem.id = folderId;
             }
             else
@@ -615,7 +615,7 @@ namespace LocalNicoMyList
 
         public  void folderReordered()
         {
-            MainWindow.instance._dbAccessor.updateFolderOrderIdx(this.folderView._folderListItemSource);
+            MainWindow.instance._dbAccessor.updateFolderOrderIdx(this.folderView.folderLVItemsSourcee);
         }
     }
 
