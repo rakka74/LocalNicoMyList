@@ -109,7 +109,7 @@
     </ApplicationDefinition>
     <Compile Include="DragDropListView\AcceptDrop.cs" />
     <Compile Include="DragDropListView\AcceptDropSpecifications.cs" />
-    <Compile Include="FolderItemDragDropBehavior.cs" />
+    <Compile Include="FolderItemDragBehavior.cs" />
     <Compile Include="FolderView.xaml.cs">
       <DependentUpon>FolderView.xaml</DependentUpon>
     </Compile>

@@ -16,13 +16,13 @@ using System.Windows.Shapes;
 
 namespace LocalNicoMyList
 {
-    class FolderItemDragDropBehavior : Behavior<FrameworkElement>
+    class FolderItemDragBehavior : Behavior<FrameworkElement>
     {
         #region ■■■■■ 依存関係プロパティ
 
         public static readonly DependencyProperty IsDragEnabledProperty =
             DependencyProperty.Register("IsDragEnabled", typeof(bool),
-            typeof(FolderItemDragDropBehavior), new UIPropertyMetadata(true));
+            typeof(FolderItemDragBehavior), new UIPropertyMetadata(true));
 
         public bool IsDragEnabled
         {
@@ -113,17 +113,6 @@ namespace LocalNicoMyList
                 var loc = sender.PointFromScreen(sender.PointToScreen(new Point(0, 0)));
                 _dragContentAdorner.LeftOffset = p.X - loc.X;
                 _dragContentAdorner.TopOffset = p.Y - loc.Y;
-            }
-        }
-
-        private void drop(object sender, DragEventArgs e)
-        {
-            var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
-            if (null == lvi)
-                return;
-
-            if (e.Data.GetDataPresent(typeof(FolderItem)))
-            {
             }
         }
 

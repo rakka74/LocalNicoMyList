@@ -151,7 +151,7 @@
                         AllowDrop="True"
                   >
             <i:Interaction.Behaviors>
-                <local:FolderItemDragDropBehavior IsDragEnabled="{Binding Path=isFolderItemDragEnabled}"/>
+                <local:FolderItemDragBehavior IsDragEnabled="{Binding Path=isFolderItemDragEnabled}"/>
                 <ddlv:AcceptDrop Specifications="{Binding dropSpecifications}" />
             </i:Interaction.Behaviors>
             <ListView.Resources>
