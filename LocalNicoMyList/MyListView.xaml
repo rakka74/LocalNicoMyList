@@ -164,7 +164,7 @@
         </Grid>
         <!-- マイリスト一覧 -->
         <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding myListItemCVS.View}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True"
-                        VirtualizingPanel.ScrollUnit="Pixel" MouseLeftButtonDown="videoListView_MouseLeftButtonDown" MouseRightButtonDown="videoListView_MouseRightButtonDown" >
+                        VirtualizingPanel.ScrollUnit="Pixel" MouseDown="videoListView_MouseDown">
             <i:Interaction.Behaviors>
                 <ddlv:AcceptDrop Specifications="{Binding dropSpecifications}" />
                 <local:MyListItemDragBehavior />

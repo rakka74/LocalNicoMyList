@@ -144,7 +144,7 @@
     </UserControl.Resources>
     <Grid x:Name="rootGrid">
         <ListView Grid.Column="0" x:Name="_folderListView" ItemsSource="{Binding folderLVItemsSource}" ItemTemplate="{DynamicResource FolderListDataTemplate}" SelectionChanged="_folderListView_SelectionChanged" SelectionMode="Single"
-                        MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown"
+                        MouseDown="folderListView_MouseDown"
                         PreviewMouseRightButtonDown="folderListView_PreviewMouseRightButtonDown"
                         DragEnter="folderListView_DragEnter"
                         DragLeave="folderListView_DragLeave"

@@ -138,13 +138,7 @@ namespace LocalNicoMyList
 
         #region ■■■■■ マイリスト一覧
 
-        private void videoListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
-            _videoListView.Focus();
-        }
-
-        private void videoListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void videoListView_MouseDown(object sender, MouseButtonEventArgs e)
         {
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _videoListView.Focus();

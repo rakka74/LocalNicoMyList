@@ -91,12 +91,7 @@ namespace LocalNicoMyList
             MainWindow.instance.folderListView_SelectionChanged(item);
         }
 
-        private void folderListView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // アイテムがない場所をクリックされてもフォーカス移動するようにする。
-            _folderListView.Focus();
-        }
-        private void folderListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void folderListView_MouseDown(object sender, MouseButtonEventArgs e)
         {
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _folderListView.Focus();
@@ -104,7 +99,6 @@ namespace LocalNicoMyList
 
         private void folderListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _folderListView.Focus();
             // ハンドルすることで右クリックでアイテムが選択されなくなる
             e.Handled = true;
         }
