@@ -113,6 +113,7 @@
     <Compile Include="FolderView.xaml.cs">
       <DependentUpon>FolderView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MyListItemDragBehavior.cs" />
     <Compile Include="MyListView.xaml.cs">
       <DependentUpon>MyListView.xaml</DependentUpon>
     </Compile>
