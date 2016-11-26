@@ -30,16 +30,16 @@ namespace LocalNicoMyList
 
         public class ViewModel : ViewModelBase
         {
-            public ObservableCollection<FolderItem> _folderLVItemsSourcee;
+            public ObservableCollection<FolderItem> _folderLVItemsSource;
             public ObservableCollection<FolderItem> folderLVItemsSource
             {
                 get
                 {
-                    return _folderLVItemsSourcee;
+                    return _folderLVItemsSource;
                 }
                 set
                 {
-                    _folderLVItemsSourcee = value;
+                    _folderLVItemsSource = value;
                     OnPropertyChanged("folderLVItemsSource");
                 }
             }
@@ -61,7 +61,7 @@ namespace LocalNicoMyList
 
             public ViewModel()
             {
-                _folderLVItemsSourcee = new ObservableCollection<FolderItem>();
+                _folderLVItemsSource = new ObservableCollection<FolderItem>();
                 this.dropSpecifications = new AcceptDropSpecifications();
             }
         }
