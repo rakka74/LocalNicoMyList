@@ -39,9 +39,6 @@ namespace LocalNicoMyList
             this.AssociatedObject.PreviewMouseLeftButtonDown += previewMouseLeftButtonDown;
             this.AssociatedObject.PreviewMouseMove += previewMouseMove;
             this.AssociatedObject.QueryContinueDrag += queryContinueDrag;
-            //this.AssociatedObject.DragEnter += dragEnter;
-            //this.AssociatedObject.DragOver += dragOver;
-            this.AssociatedObject.Drop += drop;
             this.AssociatedObject.PreviewDragEnter += previewDragEnter;
             this.AssociatedObject.PreviewDragLeave += previewDragLeave;
 
@@ -52,9 +49,6 @@ namespace LocalNicoMyList
             this.AssociatedObject.PreviewMouseLeftButtonDown -= previewMouseLeftButtonDown;
             this.AssociatedObject.PreviewMouseMove -= previewMouseMove;
             this.AssociatedObject.QueryContinueDrag -= queryContinueDrag;
-            //this.AssociatedObject.DragEnter -= dragEnter;
-            //this.AssociatedObject.DragOver -= dragOver;
-            this.AssociatedObject.Drop -= drop;
             this.AssociatedObject.PreviewDragEnter -= previewDragEnter;
             this.AssociatedObject.PreviewDragLeave -= previewDragLeave;
         }
@@ -122,14 +116,6 @@ namespace LocalNicoMyList
             }
         }
 
-        //private void dragEnter(object sender, DragEventArgs e)
-        //{
-        //}
-
-        //private void dragOver(object sender, DragEventArgs e)
-        //{
-        //}
-
         private void drop(object sender, DragEventArgs e)
         {
             var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
@@ -138,20 +124,6 @@ namespace LocalNicoMyList
 
             if (e.Data.GetDataPresent(typeof(FolderItem)))
             {
-                var itemsSource = ((ItemsControl)sender).ItemsSource as ObservableCollection<FolderItem>;
-
-                var targetFolderItem = lvi.DataContext as FolderItem;
-                int newIndex = itemsSource.IndexOf(targetFolderItem);
-
-                var draggedFolderItem = e.Data.GetData(typeof(FolderItem)) as FolderItem;
-                int oldIndex = itemsSource.IndexOf(draggedFolderItem);
-
-                if (oldIndex != newIndex)
-                {
-                    itemsSource.Move(oldIndex, newIndex);
-                    // DBに保存
-                    MainWindow.instance.folderReordered();
-                }
             }
         }
 

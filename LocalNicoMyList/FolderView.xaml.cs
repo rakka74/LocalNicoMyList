@@ -178,16 +178,41 @@ namespace LocalNicoMyList
             if (null == lvi)
                 return;
 
-            if (e.Data.GetDataPresent(typeof(MyListItem)))
+            var targetFolderItem = lvi.DataContext as FolderItem;
+            if (e.Data.GetDataPresent(typeof(FolderItem)))
             {
-                var folderItem = lvi.DataContext as FolderItem;
-                if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
-                    MainWindow.instance.copySelectedMyListItem(folderItem);
-                else
-                    MainWindow.instance.moveSelectedMyListItem(folderItem);
-
-                folderItem.isMyListItemDropTarget = false;
+                this.folderItemDropped(targetFolderItem, e);
             }
+            else if (e.Data.GetDataPresent(typeof(MyListItem)))
+            {
+                this.myListItemDropped(targetFolderItem, e);
+            }
+        }
+
+        private void folderItemDropped(FolderItem targetFolderItem, DragEventArgs e)
+        {
+            var itemsSource = this.folderLVItemsSourcee;
+            int newIndex = itemsSource.IndexOf(targetFolderItem);
+
+            var draggedFolderItem = e.Data.GetData(typeof(FolderItem)) as FolderItem;
+            int oldIndex = itemsSource.IndexOf(draggedFolderItem);
+
+            if (oldIndex != newIndex)
+            {
+                itemsSource.Move(oldIndex, newIndex);
+                // DBに保存
+                MainWindow.instance.folderReordered();
+            }
+        }
+
+        private void myListItemDropped(FolderItem targetFolderItem, DragEventArgs e)
+        {
+            if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                MainWindow.instance.copySelectedMyListItem(targetFolderItem);
+            else
+                MainWindow.instance.moveSelectedMyListItem(targetFolderItem);
+
+            targetFolderItem.isMyListItemDropTarget = false;
         }
 
         #endregion
