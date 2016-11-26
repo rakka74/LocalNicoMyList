@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Interactivity;
 
 namespace DragDropListView
@@ -65,7 +66,9 @@ namespace DragDropListView
 
         protected override void OnAttached()
 		{
-			this.AssociatedObject.PreviewDragOver += DragOver;
+            this.AssociatedObject.PreviewDragEnter += DragEnter;
+            this.AssociatedObject.PreviewDragLeave += DragLeave;
+            this.AssociatedObject.PreviewDragOver += DragOver;
 			this.AssociatedObject.PreviewDrop += Drop;
 			base.OnAttached();
 		}
@@ -77,7 +80,27 @@ namespace DragDropListView
 			base.OnDetaching();
 		}
 
-		void DragOver(object sender, DragEventArgs e)
+        private void DragEnter(object sender, DragEventArgs e)
+        {
+            var sc = Specifications;
+
+            if (sc != null)
+            {
+                sc.OnDragEnter(sender, e);
+            }
+        }
+
+        private void DragLeave(object sender, DragEventArgs e)
+        {
+            var sc = Specifications;
+
+            if (sc != null)
+            {
+                sc.OnDragLeave(sender, e);
+            }
+        }
+
+        void DragOver(object sender, DragEventArgs e)
 		{
 			var sc = Specifications;
 
@@ -91,7 +114,6 @@ namespace DragDropListView
                 e.Effects = DragDropEffects.None;
                 e.Handled = true;
             }
-
 		}
 
 		void Drop(object sender, DragEventArgs e)

@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:local="clr-namespace:LocalNicoMyList"
+             xmlns:ddlv="clr-namespace:DragDropListView"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="600">
     <UserControl.Resources>
@@ -161,9 +163,11 @@
             </StackPanel>
         </Grid>
         <!-- マイリスト一覧 -->
-        <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding}" ItemTemplate="{DynamicResource VideoListDataTemplate}" 
-                        AllowDrop="True" DragEnter="_videoListView_DragEnter" DragOver="_videoListView_DragOver" Drop="_videoListView_Drop"
+        <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding myListItemCVS.View}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True"
                         VirtualizingPanel.ScrollUnit="Pixel" MouseLeftButtonDown="videoListView_MouseLeftButtonDown" MouseRightButtonDown="videoListView_MouseRightButtonDown" >
+            <i:Interaction.Behaviors>
+                <ddlv:AcceptDrop Specifications="{Binding dropSpecifications}" />
+            </i:Interaction.Behaviors>
             <ListView.Resources>
                 <ContextMenu x:Key="ItemContextMenu">
                     <MenuItem Header="削除" Click="removeMyList_Click" />

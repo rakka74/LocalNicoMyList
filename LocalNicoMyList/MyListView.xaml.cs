@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DragDropListView;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -32,16 +33,28 @@ namespace LocalNicoMyList
             set
             {
                 _myListItemSource = value;
-                _myListItemCVS.Source = value;
+                _viewModel.myListItemCVS.Source = value;
             }
         }
-        CollectionViewSource _myListItemCVS;
         public ObservableCollection<SortItem> _sortCBItems;
 
         MyListViewVM _viewModel;
 
         class MyListViewVM : ViewModelBase
         {
+            CollectionViewSource _myListItemCVS;
+            public CollectionViewSource myListItemCVS
+            {
+                get { return _myListItemCVS; }
+                set
+                {
+                    _myListItemCVS = value;
+                    OnPropertyChanged("myListItemCVS");
+                }
+            }
+
+            public AcceptDropSpecifications dropSpecifications { get; private set; }
+
             private Visibility _filterOnVisibility = Visibility.Visible;
             public Visibility filterOnVisibility
             {
@@ -74,18 +87,19 @@ namespace LocalNicoMyList
                     OnPropertyChanged("titleFilterText");
                 }
             }
+
+            public MyListViewVM()
+            {
+                _myListItemCVS = new CollectionViewSource();
+                _myListItemCVS.Source = new ObservableCollection<MyListItem>();
+                this.dropSpecifications = new AcceptDropSpecifications();
+            }
         }
 
 
         public MyListView()
         {
             InitializeComponent();
-
-            // マイリスト一覧初期化
-            _myListItemCVS = new CollectionViewSource();
-            _myListItemCVS.Source = _myListItemSource;
-            _myListItemCVS.Filter += titleFilter;
-            _videoListView.DataContext = _myListItemCVS;
 
             // コンボボックス初期化
             _sortCBItems = new ObservableCollection<SortItem>();
@@ -109,13 +123,17 @@ namespace LocalNicoMyList
             this.sortCB.DataContext = _sortCBItems;
 
             _viewModel = new MyListViewVM();
+            _viewModel.myListItemCVS.Filter += titleFilter;
+            _viewModel.dropSpecifications.DragEnter += DropSpecifications_DragEnter;
+            _viewModel.dropSpecifications.DragOver += DropSpecifications_DragOver;
+            _viewModel.dropSpecifications.DragDrop += DropSpecifications_DragDrop;
             this.DataContext = _viewModel;
         }
 
         public void liveSortingRequest()
         {
-            _myListItemCVS.IsLiveSortingRequested = true;
-            _myListItemCVS.IsLiveSortingRequested = false;
+            _viewModel.myListItemCVS.IsLiveSortingRequested = true;
+            _viewModel.myListItemCVS.IsLiveSortingRequested = false;
         }
 
         #region ■■■■■ マイリスト一覧
@@ -125,46 +143,11 @@ namespace LocalNicoMyList
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _videoListView.Focus();
         }
+
         private void videoListView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             // アイテムがない場所をクリックされてもフォーカス移動するようにする。
             _videoListView.Focus();
-        }
-
-        private void _videoListView_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent("UniformResourceLocator") ||
-                e.Data.GetDataPresent("UniformResourceLocatorW"))
-            {
-                e.Effects = DragDropEffects.Link;
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-            e.Handled = true;
-        }
-
-        private void _videoListView_DragOver(object sender, DragEventArgs e)
-        {
-            _videoListView_DragEnter(sender, e);
-        }
-
-        private async void _videoListView_Drop(object sender, DragEventArgs e)
-        {
-            string uri = e.Data.GetData(DataFormats.Text)?.ToString();
-            Console.WriteLine(uri);
-            var match = Regex.Match(uri, @"watch/(sm[0-9]+)");
-            if (match.Success)
-            {
-                string videoId = match.Groups[1].Value;
-                await MainWindow.instance.nicoVideoDroped(videoId);
-            }
-            match = Regex.Match(uri, @"mylist/[0-9]+");
-            if (match.Success)
-            {
-                await MainWindow.instance.nicoMyListDroped("http://www.nicovideo.jp/" + match.Value);
-            }
         }
 
         #endregion
@@ -279,6 +262,51 @@ namespace LocalNicoMyList
 
         #endregion
 
+        #region ■■■■■ ドロップ関連
+
+        private void DropSpecifications_DragEnter(object sender, DragEventArgs e)
+        {
+            // ListViewItemの中のTextBlockに入ったりしたタイミングでもDragEnterが呼ばれて何も処理しないとドラッグできてしまう状態になるので。
+            this.DropSpecifications_DragOver(sender, e);
+            e.Handled = true;
+        }
+
+        private void DropSpecifications_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("UniformResourceLocator") ||
+                e.Data.GetDataPresent("UniformResourceLocatorW"))
+            {
+                e.Effects = DragDropEffects.Link;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private async void DropSpecifications_DragDrop(object sender, DragEventArgs e)
+        {
+            string uri = e.Data.GetData(DataFormats.Text)?.ToString();
+            if (null == uri) // 念のため
+                return;
+
+            Console.WriteLine(uri);
+            var match = Regex.Match(uri, @"watch/(sm[0-9]+)");
+            if (match.Success)
+            {
+                string videoId = match.Groups[1].Value;
+                await MainWindow.instance.nicoVideoDroped(videoId);
+            }
+            match = Regex.Match(uri, @"mylist/[0-9]+");
+            if (match.Success)
+            {
+                await MainWindow.instance.nicoMyListDroped("http://www.nicovideo.jp/" + match.Value);
+            }
+        }
+
+        #endregion
+
+
         #region ■■■■■ マイリスト一覧、コンテキストメニュー
 
         private void removeMyList_Click(object sender, RoutedEventArgs e)
@@ -318,7 +346,7 @@ namespace LocalNicoMyList
 
         public void setSortKind(SortKind sortKind)
         {
-            _myListItemCVS.SortDescriptions.Clear();
+            _viewModel.myListItemCVS.SortDescriptions.Clear();
 
             SortDescription sortDescription = new SortDescription();
             switch (sortKind)
@@ -437,7 +465,7 @@ namespace LocalNicoMyList
                     break;
             }
 
-            _myListItemCVS.SortDescriptions.Add(sortDescription);
+            _viewModel.myListItemCVS.SortDescriptions.Add(sortDescription);
         }
 
         #endregion
@@ -458,8 +486,8 @@ namespace LocalNicoMyList
                 _viewModel.filterOffVisibility = Visibility.Visible;
                 _viewModel.filterOnVisibility = Visibility.Collapsed;
             }
-            _myListItemCVS.IsLiveFilteringRequested = true;
-            _myListItemCVS.IsLiveFilteringRequested = false;
+            _viewModel.myListItemCVS.IsLiveFilteringRequested = true;
+            _viewModel.myListItemCVS.IsLiveFilteringRequested = false;
         }
 
         private void titleFilter(object sender, FilterEventArgs e)
