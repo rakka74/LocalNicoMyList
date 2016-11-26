@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using DragDropListView;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -43,7 +44,7 @@ namespace LocalNicoMyList
                 }
             }
 
-            private bool _isFolderItemDragEnabled = false;
+            private bool _isFolderItemDragEnabled = true;
             public bool isFolderItemDragEnabled
             {
                 get {
@@ -56,9 +57,12 @@ namespace LocalNicoMyList
                 }
             }
 
+            public AcceptDropSpecifications dropSpecifications { get; private set; }
+
             public ViewModel()
             {
                 _folderLVItemsSourcee = new ObservableCollection<FolderItem>();
+                this.dropSpecifications = new AcceptDropSpecifications();
             }
         }
 
@@ -72,6 +76,8 @@ namespace LocalNicoMyList
             InitializeComponent();
 
             _viewModel = new ViewModel();
+            _viewModel.dropSpecifications.DragOver += DropSpecifications_DragOver;
+            _viewModel.dropSpecifications.DragDrop += DropSpecifications_DragDrop;
             this.rootGrid.DataContext = _viewModel;
         }
 
@@ -107,38 +113,15 @@ namespace LocalNicoMyList
         {
             var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
 
-            if (null == lvi)
+            if (null != lvi && e.Data.GetDataPresent(typeof(MyListItem)))
             {
-                e.Effects = DragDropEffects.None;
-            }
-            else {
-                if (e.Data.GetDataPresent(typeof(FolderItem)))
+                var folderItem = lvi.DataContext as FolderItem;
+                if (folderItem.id != _selectedFolderItem.id)
                 {
-                }
-                else {
-                    e.Effects = DragDropEffects.None;
-                    if (e.Data.GetDataPresent(typeof(MyListItem)))
-                    {
-                        var folderItem = lvi.DataContext as FolderItem;
-
-                        if (folderItem.id != _selectedFolderItem.id)
-                        {
-                            if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
-                                e.Effects = DragDropEffects.Copy;
-                            else
-                                e.Effects = DragDropEffects.Move;
-                            // ドロップ先のフォルダのListViewItemの色を変更
-                            folderItem.isMyListItemDropTarget = true;
-                        }
-                    }
+                    // ドロップ先のフォルダのListViewItemの色を変更
+                    folderItem.isMyListItemDropTarget = true;
                 }
             }
-            e.Handled = true;
-        }
-
-        private void folderListView_DragOver(object sender, DragEventArgs e)
-        {
-            folderListView_DragEnter(sender, e);
         }
 
         private void folderListView_DragLeave(object sender, DragEventArgs e)
@@ -151,7 +134,45 @@ namespace LocalNicoMyList
             }
         }
 
-        private void folderListView_Drop(object sender, DragEventArgs e)
+        #endregion
+
+        #region ■■■■■ ドラッグ＆ドロップ関連
+
+        private void DropSpecifications_DragOver(object sender, DragEventArgs e)
+        {
+            var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+
+            if (null == lvi)
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            else
+            {
+                if (e.Data.GetDataPresent(typeof(FolderItem)))
+                {
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                    if (e.Data.GetDataPresent(typeof(MyListItem)))
+                    {
+                        var folderItem = lvi.DataContext as FolderItem;
+
+                        if (folderItem.id != _selectedFolderItem.id)
+                        {
+                            if (0 != (e.KeyStates & DragDropKeyStates.ControlKey))
+                                e.Effects = DragDropEffects.Copy;
+                            else
+                                e.Effects = DragDropEffects.Move;
+                            // ドロップ先のフォルダのListViewItemの色を変更
+                            //folderItem.isMyListItemDropTarget = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DropSpecifications_DragDrop(object sender, DragEventArgs e)
         {
             var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
             if (null == lvi)

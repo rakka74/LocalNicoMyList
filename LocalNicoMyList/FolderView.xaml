@@ -5,6 +5,7 @@
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalNicoMyList"
+             xmlns:ddlv="clr-namespace:DragDropListView"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -146,13 +147,12 @@
                         MouseLeftButtonDown="folderListView_MouseLeftButtonDown" MouseRightButtonDown="folderListView_MouseRightButtonDown"
                         PreviewMouseRightButtonDown="folderListView_PreviewMouseRightButtonDown"
                         DragEnter="folderListView_DragEnter"
-                        DragOver="folderListView_DragOver"
                         DragLeave="folderListView_DragLeave"
-                        Drop="folderListView_Drop"
                         AllowDrop="True"
                   >
             <i:Interaction.Behaviors>
-                <local:FolderItemDragDropBehavior IsDragEnabled="{Binding Path=isFolderItemDragEnabled, Mode=TwoWay}"/>
+                <local:FolderItemDragDropBehavior IsDragEnabled="{Binding Path=isFolderItemDragEnabled}"/>
+                <ddlv:AcceptDrop Specifications="{Binding dropSpecifications}" />
             </i:Interaction.Behaviors>
             <ListView.Resources>
                 <ContextMenu x:Key="ItemContextMenu" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
