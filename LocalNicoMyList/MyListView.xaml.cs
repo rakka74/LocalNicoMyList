@@ -34,6 +34,10 @@ namespace LocalNicoMyList
             {
                 _myListItemSource = value;
                 _viewModel.myListItemCVS.Source = value;
+                // スクロール位置を先頭に
+                var enumerator = _viewModel.myListItemCVS.View.GetEnumerator();
+                enumerator.MoveNext();
+                _videoListView.ScrollIntoView(enumerator.Current);
             }
         }
         public ObservableCollection<SortItem> _sortCBItems;
@@ -136,7 +140,7 @@ namespace LocalNicoMyList
             _viewModel.myListItemCVS.IsLiveSortingRequested = false;
         }
 
-        #region ■■■■■ マイリスト一覧
+#region ■■■■■ マイリスト一覧
 
         private void videoListView_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -144,9 +148,9 @@ namespace LocalNicoMyList
             _videoListView.Focus();
         }
 
-        #endregion
+#endregion
 
-        #region ■■■■■ マイリスト一覧 ListViewItem
+#region ■■■■■ マイリスト一覧 ListViewItem
 
         private void MyListListViewItem_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -158,9 +162,9 @@ namespace LocalNicoMyList
             }
         }
 
-        #endregion
+#endregion
 
-        #region ■■■■■ ドロップ関連
+#region ■■■■■ ドロップ関連
 
         private void DropSpecifications_DragEnter(object sender, DragEventArgs e)
         {
@@ -202,10 +206,10 @@ namespace LocalNicoMyList
             }
         }
 
-        #endregion
+#endregion
 
 
-        #region ■■■■■ マイリスト一覧、コンテキストメニュー
+#region ■■■■■ マイリスト一覧、コンテキストメニュー
 
         private void removeMyList_Click(object sender, RoutedEventArgs e)
         {
@@ -227,9 +231,9 @@ namespace LocalNicoMyList
             MainWindow.instance.removedMyListItems(removedItems);
         }
 
-        #endregion
+#endregion
 
-        #region ■■■■■ ソート関連
+#region ■■■■■ ソート関連
 
         private void sortCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -366,9 +370,9 @@ namespace LocalNicoMyList
             _viewModel.myListItemCVS.SortDescriptions.Add(sortDescription);
         }
 
-        #endregion
+#endregion
 
-        #region ■■■■■ タイトルフィルター
+#region ■■■■■ タイトルフィルター
 
         private void titleFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -412,7 +416,7 @@ namespace LocalNicoMyList
             _viewModel.titleFilterText = "";
         }
 
-        #endregion
+#endregion
 
         private async void refreshButton_Click(object sender, RoutedEventArgs e)
         {
