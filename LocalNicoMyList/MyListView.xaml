@@ -108,7 +108,7 @@
                         <TextBlock Text="{Binding firstRetrieve, StringFormat=yyyy年MM月dd日\ hh時mm分}" FontSize="12" FontWeight="Bold" />
                         <TextBlock Text="投稿" FontSize="12" Margin="5,0,0,0"/>
                     </StackPanel>
-                    <dwtb:DirectWriteTextBlock Text="{Binding title}" FontSize="16" FontWeight="Bold" />
+                    <dwtb:DirectWriteTextBlock Text="{Binding title}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left" />
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="再生：" FontSize="12" />
                         <TextBlock Text="{Binding viewCounter, StringFormat={}{0:#\,0}}" FontSize="12" FontWeight="Bold"/>
