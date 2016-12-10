@@ -6,6 +6,7 @@
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:local="clr-namespace:LocalNicoMyList"
              xmlns:ddlv="clr-namespace:DragDropListView"
+             xmlns:dwtb="clr-namespace:DirectWriteTextBlockNS"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="600">
     <UserControl.Resources>
@@ -107,7 +108,7 @@
                         <TextBlock Text="{Binding firstRetrieve, StringFormat=yyyy年MM月dd日\ hh時mm分}" FontSize="12" FontWeight="Bold" />
                         <TextBlock Text="投稿" FontSize="12" Margin="5,0,0,0"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding title}" FontSize="16" FontWeight="Bold" />
+                    <dwtb:DirectWriteTextBlock Text="{Binding title}" FontSize="16" FontWeight="Bold" />
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="再生：" FontSize="12" />
                         <TextBlock Text="{Binding viewCounter, StringFormat={}{0:#\,0}}" FontSize="12" FontWeight="Bold"/>
@@ -163,7 +164,7 @@
         </Grid>
         <!-- マイリスト一覧 -->
         <ListView Grid.Row="1" x:Name="_videoListView" ItemsSource="{Binding myListItemCVS.View}" ItemTemplate="{DynamicResource VideoListDataTemplate}" AllowDrop="True"
-                        VirtualizingPanel.ScrollUnit="Pixel" MouseDown="videoListView_MouseDown">
+                        VirtualizingPanel.ScrollUnit="Pixel" VirtualizingPanel.VirtualizationMode="Recycling" MouseDown="videoListView_MouseDown">
             <i:Interaction.Behaviors>
                 <ddlv:AcceptDrop Specifications="{Binding dropSpecifications}" />
                 <local:MyListItemDragBehavior />
