@@ -67,8 +67,7 @@ void DirectWriteTextBlockLib::setFontSize(float fontSize)
 
 void DirectWriteTextBlockLib::setFontWeight(System::Windows::FontWeight fontWeight)
 {
-	// TODO
-	_fontWeight = DWRITE_FONT_WEIGHT_REGULAR;
+	_fontWeight = (DWRITE_FONT_WEIGHT)fontWeight.ToOpenTypeWeight();
 }
 
 System::Windows::Size DirectWriteTextBlockLib::getTextSize()

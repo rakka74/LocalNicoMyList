@@ -57,7 +57,7 @@ namespace DirectWriteTextBlockNS
 
         ~DirectWriteTextBlock()
         {
-            Debug.WriteLine("~DirectWriteTextBlock");
+            //Debug.WriteLine("~DirectWriteTextBlock");
             _dwTextBlockLib.Dispose();
             _dwTextBlockLib = null;
         }
@@ -72,6 +72,7 @@ namespace DirectWriteTextBlockNS
             this.FontFamily.FamilyNames.TryGetValue(XmlLanguage.GetLanguage("en-us"), out fontFamilyName);
             _dwTextBlockLib.setFontFamilyName(fontFamilyName);
             _dwTextBlockLib.setFontSize((float)this.FontSize);
+            _dwTextBlockLib.setFontWeight(this.FontWeight);
 
             this.textPropertyChanged(this.Text);
 
@@ -99,14 +100,11 @@ namespace DirectWriteTextBlockNS
 
         void textPropertyChanged(string newText)
         {
-            //this.textBlock.Text = newText;
-            Debug.WriteLine(newText);
-
+            //Debug.WriteLine(newText);
             if (null != _dwTextBlockLib)
             {
                 _dwTextBlockLib.setText(newText);
                 Size textSize = _dwTextBlockLib.getTextSize();
-                //Debug.WriteLine("{0}, w={1}, h={2}", newText, textSize.Width, textSize.Height);
 
                 // サイズ変更
                 grid.Width = textSize.Width;
