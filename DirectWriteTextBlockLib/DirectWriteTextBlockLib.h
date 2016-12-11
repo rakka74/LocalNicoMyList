@@ -25,8 +25,6 @@ namespace DirectWriteTextBlockLibNS {
 		void render(IntPtr, bool);
 
 	private:
-		IDWriteFactory* _pDWriteFactory; // 全てのインスタンスで共有したい
-		ID2D1Factory* _pD2DFactory; // 全てのインスタンスで共有したい
 		ID2D1RenderTarget* _pRenderTarget;
 		ID2D1SolidColorBrush* _pBrush;
 

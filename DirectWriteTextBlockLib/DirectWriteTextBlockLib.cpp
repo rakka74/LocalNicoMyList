@@ -9,6 +9,11 @@
 using namespace DirectWriteTextBlockLibNS;
 using namespace System::Diagnostics;
 
+int g_refCount = 0;
+
+IDWriteFactory* g_pDWriteFactory;
+ID2D1Factory* g_pD2DFactory;
+
 DirectWriteTextBlockLib::DirectWriteTextBlockLib()
 {
 	_text = new std::wstring(L"");
@@ -16,17 +21,23 @@ DirectWriteTextBlockLib::DirectWriteTextBlockLib()
 	_fontSize = 12;
 	_fontWeight = DWRITE_FONT_WEIGHT_REGULAR;
 
-	pin_ptr<IDWriteFactory*> pinDWriteFactory = &_pDWriteFactory;
-	DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)pinDWriteFactory);
+	if (0 == g_refCount) {
+		pin_ptr<IDWriteFactory*> pinDWriteFactory = &g_pDWriteFactory;
+		DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)pinDWriteFactory);
 
-	pin_ptr<ID2D1Factory*> pinD2DFactory = &_pD2DFactory;
-	D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, (ID2D1Factory**)pinD2DFactory);
+		pin_ptr<ID2D1Factory*> pinD2DFactory = &g_pD2DFactory;
+		D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, (ID2D1Factory**)pinD2DFactory);
+	}
+	++g_refCount;
 }
 
 DirectWriteTextBlockLib::~DirectWriteTextBlockLib()
 {
-	ReleaseInterface(_pDWriteFactory);
-	ReleaseInterface(_pD2DFactory);
+	--g_refCount;
+	if (0 == g_refCount) {
+		ReleaseInterface(g_pDWriteFactory);
+		ReleaseInterface(g_pD2DFactory);
+	}
 	ReleaseInterface(_pRenderTarget);
 	ReleaseInterface(_pBrush);
 
@@ -73,7 +84,7 @@ void DirectWriteTextBlockLib::setFontWeight(System::Windows::FontWeight fontWeig
 System::Windows::Size DirectWriteTextBlockLib::getTextSize()
 {
 	IDWriteTextFormat* pTextFormat;
-	_pDWriteFactory->CreateTextFormat(
+	g_pDWriteFactory->CreateTextFormat(
 		_fontFamilyName->c_str(),
 		NULL,                       // Font collection (NULL sets it to use the system font collection).
 		_fontWeight,
@@ -86,7 +97,7 @@ System::Windows::Size DirectWriteTextBlockLib::getTextSize()
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 	IDWriteTextLayout* pTextLayout;
-	_pDWriteFactory->CreateTextLayout(_text->c_str(), (UINT32)_text->length(), pTextFormat, 10, 10, &pTextLayout);
+	g_pDWriteFactory->CreateTextLayout(_text->c_str(), (UINT32)_text->length(), pTextFormat, 10, 10, &pTextLayout);
 
 	DWRITE_TEXT_METRICS textMetrics;
 	pTextLayout->GetMetrics(&textMetrics);
@@ -111,7 +122,7 @@ void DirectWriteTextBlockLib::render(IntPtr pResource, bool isNewSurface)
 		IDXGISurface* pDXGISurface = (IDXGISurface*)pResource.ToPointer();
 
 		pin_ptr<ID2D1RenderTarget*> pinRenderTarget = &_pRenderTarget;
-		_pD2DFactory->CreateDxgiSurfaceRenderTarget(pDXGISurface, &rtp, pinRenderTarget);
+		g_pD2DFactory->CreateDxgiSurfaceRenderTarget(pDXGISurface, &rtp, pinRenderTarget);
 
 		pin_ptr<ID2D1SolidColorBrush*> pinBrush = &_pBrush;
 		_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.0F, 0.0F, 0.0F), pinBrush);
@@ -122,7 +133,7 @@ void DirectWriteTextBlockLib::render(IntPtr pResource, bool isNewSurface)
 	_pRenderTarget->Clear(D2D1::ColorF(1.0f, 1.0f, 1.0f, 0.0f)); // transparent
 
 	IDWriteTextFormat* pTextFormat;
-	_pDWriteFactory->CreateTextFormat(
+	g_pDWriteFactory->CreateTextFormat(
 		_fontFamilyName->c_str(),
 		NULL,                       // Font collection (NULL sets it to use the system font collection).
 		_fontWeight,
@@ -135,7 +146,7 @@ void DirectWriteTextBlockLib::render(IntPtr pResource, bool isNewSurface)
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 	IDWriteTextLayout* pTextLayout;
-	_pDWriteFactory->CreateTextLayout(_text->c_str(), (UINT32)_text->length(), pTextFormat, 10, 10, &pTextLayout);
+	g_pDWriteFactory->CreateTextLayout(_text->c_str(), (UINT32)_text->length(), pTextFormat, 10, 10, &pTextLayout);
 
 	_pRenderTarget->DrawTextLayout(D2D1::Point2F(0, 0), pTextLayout, _pBrush);
 
