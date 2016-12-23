@@ -215,9 +215,10 @@ namespace LocalNicoMyList
                 {
                     if (Uri.TryCreate("http://live.nicovideo.jp/", UriKind.Absolute, out uri))
                     {
-                        _cookieHeader = getBrowserCookie.CookieHeader(uri, "user_session");
-                        if (null != _cookieHeader)
+                        var cookieHeader = getBrowserCookie.CookieHeader(uri, "user_session");
+                        if (null != cookieHeader && cookieHeader.Length > 0)
                         {
+                            _cookieHeader = cookieHeader;
                             return true;
                         }
                     }
