@@ -54,6 +54,7 @@ namespace LocalNicoMyList
         }
 
         Point? _mouseDownPt = null;
+        ListViewItem _mouseDownLVI;
         Point _mouseOffsetFromItem;
 
         private void previewMouseLeftButtonDown(object sender_, MouseButtonEventArgs e)
@@ -64,7 +65,7 @@ namespace LocalNicoMyList
             {
                 // マウスダウン時の座標を取得
                 _mouseDownPt = sender.PointToScreen(e.GetPosition(sender));
-
+                _mouseDownLVI = lvi;
                 _mouseOffsetFromItem = lvi.PointFromScreen(_mouseDownPt.Value);
             }
         }
@@ -81,7 +82,7 @@ namespace LocalNicoMyList
             var point = sender.PointToScreen(e.GetPosition(sender));
             if (this.checkDistance(point, _mouseDownPt.Value))
             {
-                var lvi = ((ItemsControl)sender).ContainerFromElement(e.OriginalSource as DependencyObject) as ListViewItem;
+                var lvi = _mouseDownLVI;
                 _dragContentAdorner = new DragAdorner(sender, lvi, 0.7, _mouseOffsetFromItem);
 
                 FolderItem folderItem = lvi?.DataContext as FolderItem;
