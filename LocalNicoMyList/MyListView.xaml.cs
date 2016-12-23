@@ -194,8 +194,7 @@ namespace LocalNicoMyList
             if (null == uri) // 念のため
                 return;
 
-            Console.WriteLine(uri);
-            var match = Regex.Match(uri, @"watch/(sm[0-9]+)");
+            var match = Regex.Match(uri, @"watch/((sm|nm)[0-9]+)");
             if (match.Success)
             {
                 string videoId = match.Groups[1].Value;

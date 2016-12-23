@@ -252,14 +252,20 @@ namespace LocalNicoMyList
                 Func<dynamic, Task> action = async (item) =>
                 {
                     var videoId = item["item_data"]["video_id"];
-                    var createTime = (long)item["create_time"];
-                    ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
-                    DateTime? latestCommentTime = null;
-                    var myListItem = MyListItem.from(res, latestCommentTime, DateTimeExt.fromUnixTime(createTime));
-                    if (null != myListItem)
+                    // so～が追加されることがあったのでチェック
+                    var match = Regex.Match(videoId, @"(sm|nm)[0-9]+");
+                    if (match.Success)
                     {
-                        myListItems.Add(myListItem);
+                        var createTime = (long)item["create_time"];
+                        ThumbInfoResponse res = await _nicoApi.getThumbInfo(videoId);
+                        DateTime? latestCommentTime = null;
+                        var myListItem = MyListItem.from(res, latestCommentTime, DateTimeExt.fromUnixTime(createTime));
+                        if (null != myListItem)
+                        {
+                            myListItems.Add(myListItem);
+                        }
                     }
+
                     Interlocked.Add(ref count, 1);
                     progress.Report(count);
                 };
@@ -426,20 +432,33 @@ namespace LocalNicoMyList
                                     break;
                                 }
                                 string error = nameValues["error"];
-                                if (null != error && error.Equals("access_locked"))
+                                if (null != error)
                                 {
-                                    // アクセス制限
-                                    Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
-                                    int waitSec = waitTime / 1000;
-                                    do
+                                    if (error.Equals("access_locked"))
                                     {
-                                        _viewModel.getflvText = string.Format(": {0} | 残り{1} [アクセス制限:{2}]", videoId, _getflvQueue.Count, waitSec);
-                                        await Task.Delay(1000, _getflvCTS.Token);
-                                        --waitSec;
-                                    } while (waitSec > 0);
-                                    _viewModel.getflvText = string.Format(": {0} | 残り{1}", videoId, _getflvQueue.Count);
-                                    waitTime += 1000;
+                                        // アクセス制限
+                                        Console.WriteLine("accessLocked -> waitTime={0}", waitTime);
+                                        int waitSec = waitTime / 1000;
+                                        do
+                                        {
+                                            _viewModel.getflvText = string.Format(": {0} | 残り{1} [アクセス制限:{2}]", videoId, _getflvQueue.Count, waitSec);
+                                            await Task.Delay(1000, _getflvCTS.Token);
+                                            --waitSec;
+                                        } while (waitSec > 0);
+                                        _viewModel.getflvText = string.Format(": {0} | 残り{1}", videoId, _getflvQueue.Count);
+                                        waitTime += 1000;
+                                    }
+                                    else
+                                    {
+#if DEBUG
+                                        MessageBox.Show(string.Format("getflv: error={0}\n" + "videoId={1}", error, videoId));
+#endif
+                                        // 不具合でso～が追加された場合、error =invalid_v1 でいつまでたっても成功しなかったので念のため
+                                        _getflvQueue.TryDequeue(out videoId);
+                                        break;
+                                    }
                                 }
+
                             }
                         }
                     }
