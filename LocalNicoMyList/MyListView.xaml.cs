@@ -36,8 +36,10 @@ namespace LocalNicoMyList
                 _viewModel.myListItemCVS.Source = value;
                 // スクロール位置を先頭に
                 var enumerator = _viewModel.myListItemCVS.View.GetEnumerator();
-                enumerator.MoveNext();
-                _videoListView.ScrollIntoView(enumerator.Current);
+                if (enumerator.MoveNext())
+                {
+                    _videoListView.ScrollIntoView(enumerator.Current);
+                }
             }
         }
         public ObservableCollection<SortItem> _sortCBItems;
